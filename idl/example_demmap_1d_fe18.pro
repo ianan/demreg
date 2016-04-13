@@ -54,6 +54,9 @@ pro example_demmap_1d_fe18
   dn_all18=[dn,dn_fe18z]
   edn_all18=0.2*dn_all18
   TRfe18z= (TRmatrix[*,0]-TRmatrix[*,4]/120.-TRmatrix[*,2]/450.) >0.
+  ; Make sure nothing in the low T peak
+  ; A fairly crude way of doing this.....
+  TRfe18z[where(logt le 6.4)]=0.
   TRall18=dblarr(n_elements(TRmatrix[*,0]),7)
   TRall18[*,0:5]=TRmatrix
   TRall18[*,6]=TRfe18z
