@@ -158,6 +158,7 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
 
         ; just in case we need dem_reg for the next loop and a new L
         ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
+        fcofmx=1d-3
         dr0=dem_reg_out
         dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
         dem_reg=dem_reg/(fcofmx*max(dr0))
