@@ -39,6 +39,8 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
   ;                     - don't pass in Lorg anymore
   ;                     - if doing gloci do it using all filters or just the selected via glc ne 0
   ;
+  ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
+  ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   na=n_elements(dd[*,0])
   nf=n_elements(RMatrix[0,*])
@@ -173,10 +175,13 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
       ;############ if positive or reached max_iter work rest out ############
 
       dem[i,*]=DEM_reg_out
-      dn_reg0=reform(rmatrix##DEM_reg)
+      
+      ; Make sure this is dem_reg_out
+      dn_reg0=reform(rmatrix##DEM_reg_out)
       dn_reg[i,*]=dn_reg0
       residuals=(dnin-dn_reg0)/ednin
       chisq[i]=total(residuals^2)/(nf)
+      
 
       ;################ Do the error calcualtion ######################
 
@@ -185,6 +190,8 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
       edem[i,*]=sqrt(diag_matrix(delxi2))
 
       ; Resolution matrix for elogt
+      ; If everything worked then kdag so be the perfect inverse of k
+      ; so kdag#k=I would just be a diagional matrix
       kdagk=kdag##rmatrixin
 
       for kk=0, nt-1 do begin
@@ -198,7 +205,6 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
 
     endif
     if ((i mod 1000) eq 0)  then print,string((i*100./na*1.),format='(i3)')+'% Done'
-    ;print,i,' of ',string(na,format='(i8)')
   endfor
   print,string(100,format='(i3)')+'% Done'
 
