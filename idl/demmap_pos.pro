@@ -1,4 +1,4 @@
-pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
+pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,$
   dem,chisq,edem,elogt,dn_reg,$
   reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
 
