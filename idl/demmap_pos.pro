@@ -1,15 +1,15 @@
 pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
   dem,chisq,edem,elogt,dn_reg,$
   reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
-  
+
   ; NOTE: Use something like dn2dem_pos_nb.pro as the wrapper to this code
-  ; 
-  ; This is an updated/optimised/bug fixed version of demmap_pos.pro that was included in 
-  ; the AIA map specific version of the Regularized DEM maps code 
+  ;
+  ; This is an updated/optimised/bug fixed version of demmap_pos.pro that was included in
+  ; the AIA map specific version of the Regularized DEM maps code
   ; http://www.astro.gla.ac.uk/~iain/demreg/map/ and Hannah & Kontar 2013 A&A 553
-  
+
   ; In theory in can be called by the above code but this update but in the short term
-  ; will be in the more generic and unbridged dem reg code 
+  ; will be in the more generic and unbridged dem reg code
   ; https://github.com/ianan/demreg
 
   ; Each child process called by dn2dem_map which actually does the DEM calculation
@@ -67,7 +67,7 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
   for i=0, na-1 do begin
     dnin=reform(dd[i,*])
     ednin=reform(ed[i,*])
-
+     
     for kk=0,nf-1 do RMatrixin[*,kk]=RMatrix[*,kk]/eDNin[kk]
 
     dn=dnin/ednin
@@ -76,6 +76,7 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
     prd_dn=dn[0]
     for kk=1,nf-1 do prd_dn=prd_dn*dn[kk]
 
+    ; Test if any of the data is 0, if so can just ignore this one
     if (prd_dn gt 0.) then begin
 
       ; reset the positive check
@@ -175,13 +176,13 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
       ;############ if positive or reached max_iter work rest out ############
 
       dem[i,*]=DEM_reg_out
-      
+
       ; Make sure this is dem_reg_out
       dn_reg0=reform(rmatrix##DEM_reg_out)
       dn_reg[i,*]=dn_reg0
       residuals=(dnin-dn_reg0)/ednin
       chisq[i]=total(residuals^2)/(nf)
-      
+
 
       ;################ Do the error calcualtion ######################
 
@@ -204,7 +205,9 @@ pro demmap_pos,dd,ed,RMatrix,logt,dlogt,glc,$
       endfor
 
     endif
-    if ((i mod 1000) eq 0)  then print,string((i*100./na*1.),format='(i3)')+'% Done'
+    
+    if ((i mod 1000) eq 0)  then print,string(i,format='(i7)')+' of '+string(na,format='(i7)') +$
+      ' ('+string((i*100./na*1.),format='(i3)')+'%)'
   endfor
   print,string(100,format='(i3)')+'% Done'
 
