@@ -1,13 +1,58 @@
 pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
-  
-  ;
-  ; this is an updated/optimised/bug fixed version of demmap_pos.pro that was included in
+
+  ; This is an updated/optimised/bug fixed version of demmap_pos.pro that was included in
   ; the AIA map specific version of the Regularized DEM maps code
   ; http://www.astro.gla.ac.uk/~iain/demreg/map/ and Hannah & Kontar 2013 A&A 553
-
+  ;
   ; In theory in can be called by the above code but this update but in the short term
   ; will be in the more generic and unbridged dem reg code
   ; https://github.com/ianan/demreg
+  ;
+  ; The original version is the Regularized DEM code from
+  ; Hannah & Kontar 2012 A&A 539 http://www.astro.gla.ac.uk/~iain/demreg
+  ; Which provides more options (order of constraint matrix, any data type, guess solution) but was slower than the
+  ; AIA map version.
+  ;
+  ; This version is trying to maintain the speed of the AIA map version but give some of the features
+  ; of the original non-map version e.g. regarding different data types and the guess solution
+  ;
+  ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ;
+  ;  We are trying to get the DEM from the response functions (K), and the data (g) as related via
+  ;
+  ;     g=K.DEM
+  ;
+  ;  (Note that the vector and matrix multiplcation is a bit messy in this explanation, but correct in the code and paper)
+  ;
+  ;  Regularized approach solves this via
+  ;
+  ;     ||K.DEM-g||^2 + lamb ||L.DEM||^2=min
+  ;
+  ;  where the extra bits are the constraint matrix (L) and regularization parameter (lamb).
+  ;  L is taken as a "zeroth order" constraint, something like diag(L)=sqrt(dLogT)/sqrt(dem_guess)
+  ;  As we might not have an initial dem_guess solution we can find one by running the regularization
+  ;  using diag(L)=1/sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
+  ;
+  ;  The actual regularization is solved via GSVD of K and L. 
+  ;  This outputs singular values sva and svb (with sva^2+svb^2=1) and vectors u, v, w 
+  ;  with properties U^T K W=diag(sva) and V^T L W=diag(svb)
+  ;
+  ;  The DEM solution is then given by
+  ;
+  ;     DEM_lamb = Sum_i (sva_i/(sva_i^2+svb_i^1*lamb)) * (g.u) w
+  ;
+  ;     or
+  ;
+  ;     K^-1=K^dag= Sum_i (sva_i/(sva_i^2+svb_i^1*lamb)) * u.w
+  ;
+  ;  We know all the bits of it apart from lamb. We get this from the Discrepancy principle (Morozon, 1967)
+  ;  such that the lamb chosen gives a DEM_lamb that produces a specified reduced chisq in data space which
+  ;  we call the "regularization parameter" (or reg_tweak) and want this to be 1. As we also want a physically real
+  ;  solution (e.g. a DEM_lamb that is positive) we iteratively increase reg_tweak until a positive solution is found
+  ;  (or a max number of iterations is reached).
+  ;
+  ;  Once the solution is found we work out the uncertainies
+  ;
 
   ; Each child process called by dn2dem_map which actually does the DEM calculation
   ; 25-May-2012 IGH - Created
@@ -37,6 +82,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   ;                     - if doing gloci do it using all filters or just the selected via glc ne 0
   ;
   ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
+  ; 25-Apr-2015 IGH - Updated some of the internal variable names and increased comments (though more to do!)
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   na=n_elements(dd[*,0])
@@ -64,7 +110,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   for i=0, na-1 do begin
     dnin=reform(dd[i,*])
     ednin=reform(ed[i,*])
-     
+
     for kk=0,nf-1 do RMatrixin[*,kk]=RMatrix[*,kk]/eDNin[kk]
 
     dn=dnin/ednin
@@ -98,13 +144,13 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         ; Calculate the initial constraint matrix
         ; Just a diagional matrix scaled by dlogT
 
-        for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg])
+        for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg]);1.0/sqrt(dlogT[gg])
 
         ;################ Work out the 1st DEM_reg ###########################
-        dem_inv_gsvdcsq,RMatrixin,L,Alpha,Betta,U,V,W
-        dem_inv_reg_parameter_map,Alpha,Betta,U,W,DN,eDN,rgt,opt,nmu
-        for kk=0, nf-1 do filter[kk,kk]=alpha[kk]/(alpha[kk]*alpha[kk]+$
-          betta[kk]*betta[kk]*opt)
+        dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
+        dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
+        for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+$
+          svb[kk]*svb[kk]*lamb)
         kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
         dr0=reform(kdag##dn)
 
@@ -120,7 +166,10 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         fcofmx=1d-3
         dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
         dem_reg=dem_reg/(fcofmx*max(dr0))
-        dem_reg=smooth(dem_reg,3)
+        ;       dem_reg=dem_reg^2.0
+        ;        dem_reg=smooth(dem_reg,3)
+
+        ;        stop
       endelse
 
 
@@ -128,9 +177,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
       ; ######## Still don't have a positive DEM_reg (or reached max_iter?) ########
       while(ndem gt 0 and piter lt max_iter) do begin
+
         ;################ Use first DEM_reg to weight L ###########################
         ;################ or from last lop   ######################################
 
@@ -139,12 +188,12 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
 
         ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        dem_inv_gsvdcsq,RMatrixin,L,Alpha,Betta,U,V,W
-        dem_inv_reg_parameter_map,Alpha,Betta,U,W,DN,eDN,rgt,opt,nmu
+        dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
+        dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
 
         ;################ Work out the inverse of K (Rmatrixin) ####################
-        for kk=0, nf-1 do filter[kk,kk]=alpha[kk]/(alpha[kk]*alpha[kk]+$
-          betta[kk]*betta[kk]*opt)
+        for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+$
+          svb[kk]*svb[kk]*lamb)
         kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
 
         ;################ Work out the final DEM_reg ####################
@@ -156,6 +205,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         rgt=rgt_fact*rgt
         piter=piter+1
 
+
         ; just in case we need dem_reg for the next loop and a new L
         ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
         fcofmx=1d-3
@@ -165,7 +215,6 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         dem_reg=smooth(dem_reg,3)
 
       endwhile
-
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -202,7 +251,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
       endfor
 
     endif
-    
+
     if ((i mod 1000) eq 0)  then print,string(i,format='(i7)')+' of '+string(na,format='(i7)') +$
       ' ('+string((i*100./na*1.),format='(i3)')+'%)'
   endfor
