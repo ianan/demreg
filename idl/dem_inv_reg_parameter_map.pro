@@ -12,14 +12,14 @@
 ;   none
 ;
 ; INPUTS:
-;  SigmaA 	- vector, generalised singular values
-;  SigmaB 	- vector, generalised singular values
+;  SigmaA 	  -  vector, generalised singular values
+;  SigmaB 	  - vector, generalised singular values
 ;  U      		- matrix, GSVD matrix
 ;  W      		- matrix, GSVD matrix
 ;  Data   		- vector, containing data (eg dn)
 ;  Err    		- vector, uncertanty on data (same units and dimension)
-; reg_tweak	-scalar, parameter to adjusting regularization (chisq)
-; num     - scale, number of samplesi n log-reg parm space for solution
+;  reg_tweak	-scalar, parameter to adjusting regularization (chisq)
+;  num        - scale, number of samplesi n log-reg parm space for solution
 ;
 ; OPTIONAL INPUTS:
 ;   none

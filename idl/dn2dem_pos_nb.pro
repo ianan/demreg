@@ -1,6 +1,7 @@
 pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   dem,edem,elogt,chisq,dn_reg,$
-  timed=timed,gloci=gloci,glcindx=glcindx
+  timed=timed,gloci=gloci,glcindx=glcindx,$
+  rgt_fact=rgt_fact, max_iter=max_iter,reg_tweak=reg_tweak
 
   ; Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
   ; using the method of Hannah & Kontar A&A 553 2013 
@@ -45,10 +46,14 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ;   gloci    -    /gloci if you want to use the min of the EM loci curve for the calculation ???
   ;                       Could if line data or narrow filter responses
   ;   glcindx  -    Can choose just to use gloci on certain filters, array of (nf)
-  ;                       i.e. use 4th of 6 filters glcindx=[0,0,0,1,0,0]   
+  ;                       i.e. use 4th of 6 filters glcindx=[0,0,0,1,0,0]  
+  ;   reg_tweak - What chisq trying to get for final solution in DN space (default 1)                    
+  ;   rgt_fact -  Multiplying factor of how much to increase reg tweak each iteration when trying to make positive (default 1.5, shouldn't be more than a few)
+  ;   max_iter -  Max number of iterations to try and get a positive solution (default 10)                  
   ;   
   ;   13-Apr-2015   IGH   Updated and tidied version to start further development 
   ;                         (Need to optimise L calculation and weighting, provide option to input weighting ??)
+  ;   26-Apr-2015  IGH  Added options to change, reg_tweak, rgt_fact and max_iter                      
   ;   
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

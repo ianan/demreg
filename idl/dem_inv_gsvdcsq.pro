@@ -61,7 +61,7 @@
 ;-
 
 pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
-  ;; Generalised Singular Value Decomposition with double precision ariphmetics
+  ;; Generalised Singular Value Decomposition with double precision arithmetics
 
   AB1=A##invert(B,/DOUBLE)
   ; when B is a square matrix
@@ -86,6 +86,6 @@ pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
   ; scaling
 
   W=invert(invert(oneB)##transpose(V)##B)
-  ;finding W (not the best way)
+  ;finding W (not the best way?)
 
 end

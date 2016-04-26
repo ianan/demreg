@@ -1,6 +1,6 @@
 function dem2dn, logT,dem, Tresp
 
-  ; for a given DEM, Temperature response function and temperature binning
+  ; For a given DEM, Temperature response function and temperature binning
   ; return the DN/s/px per filter and the contribution from each temperature bin
 
   ; Input:

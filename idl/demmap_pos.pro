@@ -31,10 +31,10 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   ;  where the extra bits are the constraint matrix (L) and regularization parameter (lamb).
   ;  L is taken as a "zeroth order" constraint, something like diag(L)=sqrt(dLogT)/sqrt(dem_guess)
   ;  As we might not have an initial dem_guess solution we can find one by running the regularization
-  ;  using diag(L)=1/sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
+  ;  using diag(L)=sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
   ;
-  ;  The actual regularization is solved via GSVD of K and L. 
-  ;  This outputs singular values sva and svb (with sva^2+svb^2=1) and vectors u, v, w 
+  ;  The actual regularization is solved via GSVD of K and L.
+  ;  This outputs singular values sva and svb (with sva^2+svb^2=1) and vectors u, v, w
   ;  with properties U^T K W=diag(sva) and V^T L W=diag(svb)
   ;
   ;  The DEM solution is then given by
@@ -47,11 +47,13 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   ;
   ;  We know all the bits of it apart from lamb. We get this from the Discrepancy principle (Morozon, 1967)
   ;  such that the lamb chosen gives a DEM_lamb that produces a specified reduced chisq in data space which
-  ;  we call the "regularization parameter" (or reg_tweak) and want this to be 1. As we also want a physically real
-  ;  solution (e.g. a DEM_lamb that is positive) we iteratively increase reg_tweak until a positive solution is found
-  ;  (or a max number of iterations is reached).
+  ;  we call the "regularization parameter" (or reg_tweak) and we normally take this to be 1. As we also want a
+  ;  physically real solution (e.g. a DEM_lamb that is positive) we iteratively increase reg_tweak until a
+  ;  positive solution is found (or a max number of iterations is reached).
   ;
-  ;  Once the solution is found we work out the uncertainies
+  ;  Once the solution is found we work out the uncertainies: vertical (DEM uncertainty) is a linear propagation
+  ;  of errors on DN through solution; horizontal (T resolution) is how much K^dag#K deviates from I, so measuring
+  ;  spread from diagonal but also if regularization failed at that T.
   ;
 
   ; Each child process called by dn2dem_map which actually does the DEM calculation
@@ -144,7 +146,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         ; Calculate the initial constraint matrix
         ; Just a diagional matrix scaled by dlogT
 
-        for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg]);1.0/sqrt(dlogT[gg])
+        for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg])
+        ; Better to use dT not dlogT - probably not from synthetic tests.
+        ;  for gg=0, nt-1 do L[gg,gg]=1.0/sqrt((10^(logt[gg]+0.5*dlogt[gg])-10^(logt[gg]-0.5*dlogt[gg])))
 
         ;################ Work out the 1st DEM_reg ###########################
         dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
@@ -154,24 +158,14 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
         dr0=reform(kdag##dn)
 
-        ;;        ; Yang Su identified that the old version which can causes NaNs
-        ;        DEM_reg=dr0*(dr0 gt 0)+1e-4*max(dr0)*(dr0 lt 0)
-        ;        DEM_reg=smooth(DEM_reg,3)
-        ;;        ;Yang Su's version
-        ;        DEM_reg= ( dr0 *(dr0 gt 0)/1.d3) > 1.d-15  +  $
-        ;          ( max(dr0)*(dr0 le 0.)/1.d5 )> 1.d-15
-
-        ; new testing version
         ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
-        fcofmx=1d-3
+        fcofmx=1d-4
         dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
         dem_reg=dem_reg/(fcofmx*max(dr0))
-        ;       dem_reg=dem_reg^2.0
-        ;        dem_reg=smooth(dem_reg,3)
+        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
+        dem_reg=smooth(dem_reg,3)
 
-        ;        stop
       endelse
-
 
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,6 +179,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
 
         ; old version 0th order was sqrt(dlogT)/sqrt(dem_reg)
         for kk=0, nt-1 do L[kk,kk]=sqrt(dlogT[kk])/sqrt(abs(dem_reg[kk]))
+        ; Better with dT than dlogT - probably not from synthetic tests.
+        ; for kk=0, nt-1 do L[kk,kk]=sqrt((10^(logt[kk]+0.5*dlogt[kk])-10^(logt[kk]-0.5*dlogt[kk])))/sqrt(abs(dem_reg[kk]))
 
         ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -205,13 +201,13 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
         rgt=rgt_fact*rgt
         piter=piter+1
 
-
         ; just in case we need dem_reg for the next loop and a new L
         ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
-        fcofmx=1d-3
+        fcofmx=1d-4
         dr0=dem_reg_out
         dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
         dem_reg=dem_reg/(fcofmx*max(dr0))
+        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
         dem_reg=smooth(dem_reg,3)
 
       endwhile
@@ -223,7 +219,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
 
       dem[i,*]=DEM_reg_out
 
-      ; Make sure this is dem_reg_out
+      ; Work out DN and residuals the DEM solution gives
       dn_reg0=reform(rmatrix##DEM_reg_out)
       dn_reg[i,*]=dn_reg0
       residuals=(dnin-dn_reg0)/ednin
@@ -243,7 +239,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
 
       for kk=0, nt-1 do begin
         rr=interpol(transpose(kdagk[kk,*]),logt,ltt)
-        ; where is the row bigger than the half maximum
+        ; Where is the row bigger than the half maximum
         hm_index=where(rr ge max(kdagk[kk,*])/2.,nhmi)
         elogt[i,kk]=dlogt[kk]
         if (nhmi gt 1) then $
