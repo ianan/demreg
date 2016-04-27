@@ -6,12 +6,10 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; the AIA map specific version of the Regularized DEM maps code
   ; http://www.astro.gla.ac.uk/~iain/demreg/map/ and Hannah & Kontar 2013 A&A 553
   ;
-  ; In theory in can be called by the above code but this update but in the short term
-  ; will be in the more generic and unbridged dem reg code
-  ; https://github.com/ianan/demreg
-  ;
   ; The original version is the Regularized DEM code from
-  ; Hannah & Kontar 2012 A&A 539 http://www.astro.gla.ac.uk/~iain/demreg
+  ; Hannah & Kontar 2012 A&A 539 
+  ; http://www.astro.gla.ac.uk/~iain/demreg or 
+  ; https://github.com/ianan/demreg/tree/master/idl_org
   ; Which provides more options (order of constraint matrix, any data type, guess solution) but was slower than the
   ; AIA map version.
   ;
@@ -33,7 +31,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;  where the extra bits are the constraint matrix (L) and regularization parameter (lamb).
   ;  L is taken as a "zeroth order" constraint, something like diag(L)=sqrt(dLogT)/sqrt(dem_guess)
   ;  As we might not have an initial dem_guess solution we can find one by running the regularization
-  ;  using diag(L)=1/sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
+  ;  using diag(L)=1/sqrt(dLogT) and use the output as dem_reg to make a new L and then run the 
+  ;  regularization a second time
   ;
   ;  The actual regularization is solved via GSVD of K and L.
   ;  This outputs singular values sva and svb (with sva^2+svb^2=1) and vectors u, v, w
@@ -57,7 +56,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;  of errors on DN through solution; horizontal (T resolution) is how much K^dag#K deviates from I, so measuring
   ;  spread from diagonal but also if regularization failed at that T.
   ;
-
+  ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; Each child process called by dn2dem_map which actually does the DEM calculation
   ; 25-May-2012 IGH - Created
   ; 03-Jul-2012 IGH - Changed DEM weighting as to not used smoothed & sqrt version
@@ -85,7 +84,6 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;                     - don't pass in Lorg anymore
   ;                     - if doing gloci do it using all filters or just the selected via glc ne 0
   ;
-  ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
   ; 25-Apr-2015 IGH - Updated some of the internal variable names and increased comments (though more to do!)
   ; 27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
