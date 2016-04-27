@@ -6,7 +6,7 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ; Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
   ; using the method of Hannah & Kontar A&A 553 2013
   ;
-  ; Basically getting xi(T) out of g(f)=K(f,T)#xi(T)
+  ; Basically getting DEM(T) out of g(f)=K(f,T)#DEM(T)
   ;
   ; This code is a wrapper for your input data to the regularization code demmap_pos.pro
   ;
@@ -162,6 +162,9 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   elogt1d=dblarr(nx*ny,nt)
   dn_reg1d=dblarr(nx*ny,nf)
 
+ ;*****************************************************
+; Actually doing the DEM calculations
+;*****************************************************
   ; Do we have an initial DEM guess/constraint to send to demmap_pos as well?
   if ( (size(dem0))[0] eq (size(dn))[0]) then begin
     dem01d=dblarr(nx*ny,nt)
@@ -175,16 +178,12 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
       endfor
     endfor
   endif else begin
-    ;*****************************************************
-    ;The actual routine that does the DEM calculations
-    ;*****************************************************
     demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
       dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
       reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
-    ;*****************************************************
-    ;*****************************************************
   endelse
-
+    ;*****************************************************
+    ;*****************************************************
 
   dem=dblarr(nx,ny,nt)
   chisq=dblarr(nx,ny)
