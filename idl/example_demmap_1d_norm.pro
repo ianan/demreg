@@ -1,7 +1,9 @@
-pro example_demmap_1d
+pro example_demmap_1d_norm
 
   ; Example script to recover the DEM from AIA single pixel data
   ; The AIA data is synthetic for specified Gaussian DEM model
+  ;
+  ; This version plays about with you specifiying the initial normalised guess
   ;
   ; 13-Apr-2015 IGH
   ;
@@ -11,8 +13,8 @@ pro example_demmap_1d
 
   ; Gaussian DEM model parameters
   d1=4d22
-  m1=6.5
-  s1=0.15
+  m1=6.4
+  s1=0.1
 
   ; What temperature binning do you want of the DEM?
   tt=5.7+findgen(30)/20.
@@ -26,7 +28,7 @@ pro example_demmap_1d
   endif else begin
     restore,file='aia_resp.dat'
   endelse
-  
+
   ; Only want the coronal ones without 304A
   idc=[0,1,2,3,4,6]
 
@@ -51,10 +53,14 @@ pro example_demmap_1d
   shotnoise=sqrt(dn2ph*dn0)/dn2ph/2.9
   ; error in DN/s/px
   edn=sqrt(rdnse^2+shotnoise^2)
-  
-  dn2dem_pos_nb, dn, edn,TRmatrix,logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,/gloci,glcindx=[0,1,1,1,1,1]
 
-  yr=d1*[5e-3,1e1]
+  dn2dem_pos_nb, dn, edn,TRmatrix,logt,temps,$
+    dem,edem,elogt,chisq,dn_reg,/timed
+
+  dn2dem_pos_nb, dn, edn,TRmatrix,logt,temps,$
+    dem1,edem1,elogt1,chisq1,dn_reg1,/timed,dem_norm0=dem_mod/max(dem_mod)
+
+  yr=d1*[5e-4,1e1]
   !p.thick=2
   plot,logt,dem_mod,/ylog,chars=2,xtit='Log!D10!N T', ytit='DEM [cm!U-5!N K!U-1!N]',yrange=yr,ystyle=17,xstyle=17
   loadct,39,/silent
@@ -62,6 +68,14 @@ pro example_demmap_1d
   demax=(dem+edem) < yr[1]
   demin=(dem-edem) > yr[0]
   for i=0,n_elements(logt0)-2 do oplot, mean(logt0[i:i+1])*[1,1],[demin[i],demax[i]],color=250
+
+  for i=0,n_elements(logt0)-2 do oplot,logt0[i:i+1],dem1[i]*[1,1],color=90
+  demax1=(dem1+edem1) < yr[1]
+  demin1=(dem1-edem1) > yr[0]
+  for i=0,n_elements(logt0)-2 do oplot, mean(logt0[i:i+1])*[1,1],[demin1[i],demax1[i]],color=90
+  
+  xyouts, logt[0]+0.1,1.5*yr[1],'AIA 6',color=250,/data,chars=2
+  xyouts, logt[0]+0.5,1.5*yr[1],'AIA 6 + DEM0',color=90,/data,chars=2
 
   stop
 end

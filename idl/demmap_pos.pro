@@ -1,4 +1,6 @@
-pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
+pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
+  edem,elogt,dn_reg,reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,$
+  dem_norm0=dem_norm0
 
   ; This is an updated/optimised/bug fixed version of demmap_pos.pro that was included in
   ; the AIA map specific version of the Regularized DEM maps code
@@ -31,7 +33,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   ;  where the extra bits are the constraint matrix (L) and regularization parameter (lamb).
   ;  L is taken as a "zeroth order" constraint, something like diag(L)=sqrt(dLogT)/sqrt(dem_guess)
   ;  As we might not have an initial dem_guess solution we can find one by running the regularization
-  ;  using diag(L)=sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
+  ;  using diag(L)=1/sqrt(dLogT) and it is used (dem_reg) to make a new L and run the regularization a second time
   ;
   ;  The actual regularization is solved via GSVD of K and L.
   ;  This outputs singular values sva and svb (with sva^2+svb^2=1) and vectors u, v, w
@@ -83,8 +85,12 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   ;                     - don't pass in Lorg anymore
   ;                     - if doing gloci do it using all filters or just the selected via glc ne 0
   ;
+  ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
   ; 25-Apr-2015 IGH - Updated some of the internal variable names and increased comments (though more to do!)
+  ; 27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
+  ;
+  ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   na=n_elements(dd[*,0])
@@ -112,6 +118,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
   for i=0, na-1 do begin
     dnin=reform(dd[i,*])
     ednin=reform(ed[i,*])
+    if ((size(dem_norm0))[0] gt 0) then dem_reg=reform(dem_norm0[i,*])
 
     for kk=0,nf-1 do RMatrixin[*,kk]=RMatrix[*,kk]/eDNin[kk]
 
@@ -130,43 +137,42 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,edem,elogt,dn_reg,reg_twea
       rgt=reg_tweak
 
       L=dblarr(nT,nT)
+      ; If you have supplied an initial guess/constraint normalized DEM then don't
+      ; need to calculate one (either from L=1/sqrt(dLogT) or min of EM loci)
+      if (n_elements(dem_reg) ne nt) then begin
+        if (total(glc) gt 0.) then begin
+          ; use the min of the emloci as the initial dem_reg
+          gdglc=where(glc gt 0,ngdglc)
+          emloci=dblarr(nt,ngdglc)
+          for ee=0, ngdglc-1 do emloci[*,ee]=dnin[gdglc[ee]]/(RMatrix[*,gdglc[ee]])
+          dem_model=dblarr(nt)
+          for ttt=0, nt-1 do dem_model[ttt]=min(emloci[ttt,*] > 0.)
+          dem_model=smooth(dem_model,3)
+          dem_reg=dem_model/max(dem_model)
+          dem_reg=dem_reg*(dem_reg gt 0.) +1d-10
+        endif else begin
+          ; Calculate the initial constraint matrix
+          ; Just a diagional matrix scaled by dlogT
+          for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg])
+          ; Better to use dT not dlogT - probably not from synthetic tests.
+          ;  for gg=0, nt-1 do L[gg,gg]=1.0/sqrt((10^(logt[gg]+0.5*dlogt[gg])-10^(logt[gg]-0.5*dlogt[gg])))
 
-      if (total(glc) gt 0.) then begin
-        ; use the min of the emloci as the initial dem_reg
-        gdglc=where(glc gt 0,ngdglc)
-        emloci=dblarr(nt,ngdglc)
-        for ee=0, ngdglc-1 do emloci[*,ee]=dnin[gdglc[ee]]/(RMatrix[*,gdglc[ee]])
-        dem_model=dblarr(nt)
-        for ttt=0, nt-1 do dem_model[ttt]=min(emloci[ttt,*] > 0.)
-        dem_model=smooth(dem_model,3)
-        dem_reg=dem_model/max(dem_model)
-        dem_reg=dem_reg*(dem_reg gt 0.) +1d-10
+          ;################ Work out the 1st DEM_reg ###########################
+          dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
+          dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
+          for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+$
+            svb[kk]*svb[kk]*lamb)
+          kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
+          dr0=reform(kdag##dn)
 
-      endif else begin
-        ; Calculate the initial constraint matrix
-        ; Just a diagional matrix scaled by dlogT
-
-        for gg=0, nt-1 do L[gg,gg]=1.0/sqrt(dlogT[gg])
-        ; Better to use dT not dlogT - probably not from synthetic tests.
-        ;  for gg=0, nt-1 do L[gg,gg]=1.0/sqrt((10^(logt[gg]+0.5*dlogt[gg])-10^(logt[gg]-0.5*dlogt[gg])))
-
-        ;################ Work out the 1st DEM_reg ###########################
-        dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
-        dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
-        for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+$
-          svb[kk]*svb[kk]*lamb)
-        kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
-        dr0=reform(kdag##dn)
-
-        ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
-        fcofmx=1d-4
-        dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
-        dem_reg=dem_reg/(fcofmx*max(dr0))
-        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
-        dem_reg=smooth(dem_reg,3)
-
-      endelse
-
+          ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
+          fcofmx=1d-4
+          dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
+          dem_reg=dem_reg/(fcofmx*max(dr0))
+          ;  Don't need the smoothed version anymore - seems to help with synthetic tests
+          dem_reg=smooth(dem_reg,3)
+        endelse
+      endif
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

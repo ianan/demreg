@@ -1,17 +1,17 @@
 pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   dem,edem,elogt,chisq,dn_reg,$
   timed=timed,gloci=gloci,glcindx=glcindx,$
-  rgt_fact=rgt_fact, max_iter=max_iter,reg_tweak=reg_tweak
+  rgt_fact=rgt_fact, max_iter=max_iter,reg_tweak=reg_tweak,dem_norm0=dem_norm0
 
   ; Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
-  ; using the method of Hannah & Kontar A&A 553 2013 
+  ; using the method of Hannah & Kontar A&A 553 2013
   ;
   ; Basically getting xi(T) out of g(f)=K(f,T)#xi(T)
   ;
   ; This code is a wrapper for your input data to the regularization code demmap_pos.pro
   ;
   ; Previously the wrapper was AIA map specific and parallised via IDL-Bridges, i.e.
-  ; http://www.astro.gla.ac.uk/~iain/demreg/map/ 
+  ; http://www.astro.gla.ac.uk/~iain/demreg/map/
   ; But this version takes any data in terms of multiple filters or lines and single pixel or maps/arrays
   ; also no parallisation at the moment
   ;
@@ -20,41 +20,46 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ;                   Number of y-pixels          ny
   ;                   Number of lines/filters     nf
   ;                   Number of Resp temp bins    nt0
-  ;                   Number of DEM temp bins     nt-1
-  ; 
-  ; 
+  ;                   Number of DEM temp bins     nt
+  ;
+  ;
   ;   dn_in      -    Data in appropriate units for response function (i.e. DN/s/px)
   ;                         Either a single pixel of multiple filters/lines (nf) or 2d array/map (nx,ny,nf)
   ;   edn_in     -    Error in dn_in
   ;                         Either a single pixel of multiple filters/lines (nf) or 2d array/map (nx,ny,nf)
   ;   tresp      -    Temperature response function in structure (nt0,nf) in appropiate units (i.e. DN/cm^5/s/px)
   ;   tresp_logt -    Temperature (log) binning of the response function (nt0)
-  ;   temps      -    Temperature bin edges of the output DEM (nt-1) - NOT LOG10
-  ;   
-  ;   
+  ;   temps      -    Temperature bin edges of the output DEM (nt+1) - NOT LOG10
+  ;
+  ;
   ; Outputs:
   ;
-  ;   dem      -    Regularized DEM in units of 1/cm^5/K and array of (nx,ny,nf)
+  ;   dem      -    Regularized DEM in units of 1/cm^5/K and array of (nx,ny,nt)
   ;   edem     -    Error (vertical) in the DEM
   ;   elogt    -    Error (horiztonal) in the DEM (temperature resolution/deviation from identiy matrix)
   ;   chisq    -    Chisq in data space of DEM (folded through responses) and observations
-  ;   dn_reg   -    The data space value of the DEM (folded through responses) 
-  ;   
+  ;   dn_reg   -    The data space value of the DEM (folded through responses)
+  ;
   ;   Optional Inputs:
-  ;   
+  ;
   ;   timed    -    /timed if you want to print out DEM/s
   ;   gloci    -    /gloci if you want to use the min of the EM loci curve for the calculation ???
   ;                       Could if line data or narrow filter responses
   ;   glcindx  -    Can choose just to use gloci on certain filters, array of (nf)
-  ;                       i.e. use 4th of 6 filters glcindx=[0,0,0,1,0,0]  
-  ;   reg_tweak - What chisq trying to get for final solution in DN space (default 1)                    
+  ;                       i.e. use 4th of 6 filters glcindx=[0,0,0,1,0,0]
+  ;   reg_tweak - What chisq trying to get for final solution in DN space (default 1)
   ;   rgt_fact -  Multiplying factor of how much to increase reg tweak each iteration when trying to make positive (default 1.5, shouldn't be more than a few)
-  ;   max_iter -  Max number of iterations to try and get a positive solution (default 10)                  
-  ;   
-  ;   13-Apr-2015   IGH   Updated and tidied version to start further development 
+  ;   max_iter -  Max number of iterations to try and get a positive solution (default 10)
+  ;
+  ;  dem_norm0 - Initial guess/constraing/weighting DEM, normalised and array of (nx,ny,nt)
+  ;
+  ;
+  ;    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ;   13-Apr-2015   IGH   Updated and tidied version to start further development
   ;                         (Need to optimise L calculation and weighting, provide option to input weighting ??)
-  ;   26-Apr-2015  IGH  Added options to change, reg_tweak, rgt_fact and max_iter                      
-  ;   
+  ;   26-Apr-2015  IGH  Added options to change, reg_tweak, rgt_fact and max_iter
+  ;   27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
+  ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,6 +80,10 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
     dn[0,0,*]=dn_in
     edn=dblarr(1,1,nf)
     edn[0,0,*]=edn_in
+    if ((size(dem_norm0))[0] gt 0) then begin
+      dem0=dblarr(1,1,nt)
+      dem0[0,0,*]=dem_norm0
+    endif
   endif
   if (sze[0] eq 2) then begin
     nx=sze[1]
@@ -82,7 +91,12 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
     nf=sze[2]
     dn=dblarr(nx,1,nf)
     dn[*,0,*]=dn_in
+    edn=dblarr(nx,1,nf)
     edn[*,0,*]=edn_in
+    if ((size(dem_norm0))[0] gt 0) then begin
+      dem0=dblarr(nx,1,nt)
+      dem0[*,0,*]=dem_norm0
+    endif
   endif
   if (sze[0] eq 3) then begin
     nx=sze[1]
@@ -90,6 +104,7 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
     nf=sze[3]
     dn=dn_in
     edn=edn_in
+    if ((size(dem_norm0))[0] gt 0) then dem0=dem_norm0
   endif
 
   ;**************
@@ -147,14 +162,29 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   elogt1d=dblarr(nx*ny,nt)
   dn_reg1d=dblarr(nx*ny,nf)
 
-  ;*****************************************************
-  ;The actual routine that does the DEM calculations
-  ;*****************************************************
-  demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
-    dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
-    reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
-  ;*****************************************************
-  ;*****************************************************
+  ; Do we have an initial DEM guess/constraint to send to demmap_pos as well?
+  if ( (size(dem0))[0] eq (size(dn))[0]) then begin
+    dem01d=dblarr(nx*ny,nt)
+    for yy=0, ny-1 do begin
+      for xx=0, nx-1 do begin
+        dem01d[yy*nx+xx,*]=reform(dem0[xx,yy,*])
+        demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
+          dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
+          reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,$
+          dem_norm0=dem01d
+      endfor
+    endfor
+  endif else begin
+    ;*****************************************************
+    ;The actual routine that does the DEM calculations
+    ;*****************************************************
+    demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
+      dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
+      reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact
+    ;*****************************************************
+    ;*****************************************************
+  endelse
+
 
   dem=dblarr(nx,ny,nt)
   chisq=dblarr(nx,ny)
