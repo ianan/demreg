@@ -4,6 +4,11 @@ pro example_demmap_1d
   ; The AIA data is synthetic for specified Gaussian DEM model
   ;
   ; 13-Apr-2015 IGH
+  ; 27-Apr-2015 IGH   - Changed the naming of the temperatures to make things clearer:
+  ;                     tr_logt is the binning of the response function
+  ;                     temps is the bin edges you want for the DEM
+  ;                     logtemps is the log of the above
+  ;                     mlogt is the mid_point of the above bins
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,9 +20,12 @@ pro example_demmap_1d
   s1=0.15
 
   ; What temperature binning do you want of the DEM?
+  ; These are the bin edges
   tt=5.7+findgen(30)/20.
   temps=10d^tt;[0.5,1,1.5,2,3,4,6,8,11,14,19,25,32]*1e6
-  logt0=alog10(temps)
+  logtemps=alog10(temps)
+  ; This is is the temperature bin mid-points
+  mlogt=get_edges(logtemps,/mean)
 
   ; Need to make the response functions?
   if (file_test('aia_resp.dat') eq 0) then begin
@@ -30,14 +38,15 @@ pro example_demmap_1d
   ; Only want the coronal ones without 304A
   idc=[0,1,2,3,4,6]
 
-  logT=tresp.logte
-  gdt=where(logt ge min(logt0) and logt le max(logt0),ngd)
-  logt=logt[gdt]
+  tr_logt=tresp.logte
+  ; Don't need the response outside of the T range we want for the DEM
+  gdt=where(tr_logt ge min(logtemps) and tr_logt le max(logtemps),ngd)
+  tr_logt=tr_logt[gdt]
   TRmatrix=tresp.all[*,idc]
   TRmatrix=TRmatrix[gdt,*]
   root2pi=sqrt(2.*!PI)
-  dem_mod=(d1/(root2pi*s1))*exp(-(logT-m1)^2/(2*s1^2))
-  dn_mod=dem2dn(logT, dem_mod, TRmatrix)
+  dem_mod=(d1/(root2pi*s1))*exp(-(tr_logT-m1)^2/(2*s1^2))
+  dn_mod=dem2dn(tr_logT, dem_mod, TRmatrix)
 
   dn=dn_mod.dn
   nf=n_elements(dn)
@@ -52,16 +61,16 @@ pro example_demmap_1d
   ; error in DN/s/px
   edn=sqrt(rdnse^2+shotnoise^2)
   
-  dn2dem_pos_nb, dn, edn,TRmatrix,logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,/gloci,glcindx=[0,1,1,1,1,1]
+  dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,/gloci,glcindx=[0,1,1,1,1,1]
 
   yr=d1*[5e-3,1e1]
   !p.thick=2
-  plot,logt,dem_mod,/ylog,chars=2,xtit='Log!D10!N T', ytit='DEM [cm!U-5!N K!U-1!N]',yrange=yr,ystyle=17,xstyle=17
+  plot,tr_logt,dem_mod,/ylog,chars=2,xtit='Log!D10!N T', ytit='DEM [cm!U-5!N K!U-1!N]',yrange=yr,ystyle=17,xstyle=17
   loadct,39,/silent
-  for i=0,n_elements(logt0)-2 do oplot,logt0[i:i+1],dem[i]*[1,1],color=250
+  for i=0,n_elements(mlogt)-1 do oplot,logtemps[i:i+1],dem[i]*[1,1],color=250
   demax=(dem+edem) < yr[1]
   demin=(dem-edem) > yr[0]
-  for i=0,n_elements(logt0)-2 do oplot, mean(logt0[i:i+1])*[1,1],[demin[i],demax[i]],color=250
+  for i=0,n_elements(mlogt)-1 do oplot, mlogt[i]*[1,1],[demin[i],demax[i]],color=250
 
   stop
 end

@@ -4,6 +4,12 @@ pro example_demmap_aia15
   ; The specific AIA fits used here are not include with the code
   ;
   ; 14-Apr-2015 IGH
+  ; 27-Apr-2015 IGH   - Changed the naming of the temperatures to make things clearer:
+  ;                     tr_logt is the binning of the response function
+  ;                     temps is the bin edges you want for the DEM
+  ;                     logtemps is the log of the above
+  ;                     mlogt is the mid_point of the above bins
+  ; 28-Apr-2015       - Still testing: not optimised T bins, initial weighting or errors                 
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,8 +72,14 @@ pro example_demmap_aia15
 
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; What temperature binning do you want of the DEM?
-  temps=[0.5,1,1.5,2,3,4,6,8,11,14,19,25,32]*1e6
-  logt0=alog10(temps)
+  ; These are the bin edges
+  ;  temps=[0.5,1,1.5,2,3,4,6,8,11,14,19,25,32]*1e6
+  ;  temps=[0.5,1,1.5,2,3,4,6,8,11,14,19]*1d6
+  temps=[0.5,1,2,4,6,9,14]*1d6
+  logtemps=alog10(temps)
+  ; This is is the temperature bin mid-points
+  mlogt=get_edges(logtemps,/mean)
+  nt=n_elements(mlogt)
 
   ; Need to make the response functions?
   if (file_test('aia_resp.dat') eq 0) then begin
@@ -80,9 +92,10 @@ pro example_demmap_aia15
   ; Only want the coronal ones without 304A
   idc=[0,1,2,3,4,6]
 
-  logT=tresp.logte
-  gdt=where(logt ge min(logt0) and logt le max(logt0),ngd)
-  logt=logt[gdt]
+  tr_logt=tresp.logte
+  ; Don't need the response outside of the T range we want for the DEM
+  gdt=where(tr_logt ge min(logtemps) and tr_logt le max(logtemps),ngd)
+  tr_logt=tr_logt[gdt]
   TRmatrix=tresp.all[*,idc]
   TRmatrix=TRmatrix[gdt,*]
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +103,19 @@ pro example_demmap_aia15
   ; Just do a sub-part of the image for testing purposes
   dn=dn0[261:360,311:410,*]
   edn=edn0[261:360,311:410,*]
-  dn2dem_pos_nb, dn, edn,TRmatrix,logt,temps,dem,edem,elogt,chisq,dn_reg,/timed
+  
+  nxn=n_elements(dn[*,0,0])
+  nyn=n_elements(dn[0,*,0])
+  dem_norm0=dblarr(nxn,nyn,nt)
+
+  ; Bad initial normalisation but just testing if the code works
+  for xx=0,nxn-1 do begin
+    for yy=0,nyn-1 do begin
+      dem_norm0[xx,yy,*]=[1e-2,4.2e3,5e3,1e3,1e2,1e-2]
+    endfor
+  endfor
+
+  dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,dem_norm0=dem_norm0
 
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -101,14 +126,16 @@ pro example_demmap_aia15
   ;  mdem=replicate(mm[0],nt)
   ;  for i=0,nt-1 do begin
   ;    mdem[i].data=dem[*,*,0]
-  ;    mdem[i].id=string(logt0[i],format='(f4.2)')+' to '+string(logt0[i+1],format='(f4.2)')+' Log!D10!N MK'
+  ;    mdem[i].id=string(logtemps[i],format='(f4.2)')+' to '+string(logtemps[i+1],format='(f4.2)')+' Log!D10!N MK'
   ;  endfor
 
 
   loadct,39
-  t=8
-  plot_image,dem[*,*,t],$
-    title=string(logt0[t],format='(f4.2)')+' to '+string(logt0[t+1],format='(f4.2)')+' Log!D10!N MK'
+
+  !p.multi=[0,3,nt/3]
+  ; Plot them all with the same scaling
+  for t=0,nt-1 do plot_image,alog10(dem[*,*,t]),chars=2,max=23,min=19,$
+    title=string(temps[t]*1d-6,format='(f4.1)')+' to '+string(temps[t+1]*1d-6,format='(f4.1)')+' MK'
 
   stop
 end

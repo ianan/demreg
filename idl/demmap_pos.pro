@@ -112,12 +112,10 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   if (n_elements(rgt_fact) ne 1) then rgt_fact=1.5
 
   nmu=42 ; but of course
-
   for i=0, na-1 do begin
     dnin=reform(dd[i,*])
     ednin=reform(ed[i,*])
     if ((size(dem_norm0))[0] gt 0) then dem_reg=reform(dem_norm0[i,*])
-
     for kk=0,nf-1 do RMatrixin[*,kk]=RMatrix[*,kk]/eDNin[kk]
 
     dn=dnin/ednin
@@ -128,7 +126,6 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
 
     ; Test if any of the data is 0, if so can just ignore this one
     if (prd_dn gt 0.) then begin
-
       ; reset the positive check
       ndem=1
       piter=0
@@ -175,6 +172,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
       ; ######## Still don't have a positive DEM_reg (or reached max_iter?) ########
       while(ndem gt 0 and piter lt max_iter) do begin
 
@@ -184,7 +182,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
         ; old version 0th order was sqrt(dlogT)/sqrt(dem_reg)
         for kk=0, nt-1 do L[kk,kk]=sqrt(dlogT[kk])/sqrt(abs(dem_reg[kk]))
         ; Better with dT than dlogT - probably not from synthetic tests.
-        ; for kk=0, nt-1 do L[kk,kk]=sqrt((10^(logt[kk]+0.5*dlogt[kk])-10^(logt[kk]-0.5*dlogt[kk])))/sqrt(abs(dem_reg[kk]))
+        ; for kk=0, nt-1 do L[kk,kk]=sqrt((10^(logt[kk]+0.5*dlogt[kk])-$
+        ;         10^(logt[kk]-0.5*dlogt[kk])))/sqrt(abs(dem_reg[kk]))
 
         ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -192,8 +191,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
         dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
 
         ;################ Work out the inverse of K (Rmatrixin) ####################
-        for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+$
-          svb[kk]*svb[kk]*lamb)
+        for kk=0, nf-1 do filter[kk,kk]=sva[kk]/(sva[kk]*sva[kk]+svb[kk]*svb[kk]*lamb)
         kdag=W##matrix_multiply(U[0:nf-1,0:nf-1],filter,/atrans)
 
         ;################ Work out the final DEM_reg ####################
@@ -205,21 +203,24 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
         rgt=rgt_fact*rgt
         piter=piter+1
 
-        ; just in case we need dem_reg for the next loop and a new L
-        ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
-        fcofmx=1d-4
-        dr0=dem_reg_out
-        dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
-        dem_reg=dem_reg/(fcofmx*max(dr0))
-        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
-        dem_reg=smooth(dem_reg,3)
-
+;       IS RECALCULATING DEM_REG FOR THE L AS THE LOOP STARTS AGAIN IMPORTANT?
+;       IT SEEMS THAT IT IS ALL JUST DOWN TO ICREASING RGT TO GET A +VE DEM....
+;        ; just in case we need dem_reg for the next loop and a new L
+;        ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
+;        fcofmx=1d-4
+;        dr0=dem_reg_out
+;        dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
+;        dem_reg=dem_reg/(fcofmx*max(dr0))
+;        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
+;        dem_reg=smooth(dem_reg,3)
+        
+        
       endwhile
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      ;############ if positive or reached max_iter work rest out ############
+      ;############ if positive or reached max_iter work rest out ###########
 
       dem[i,*]=DEM_reg_out
 
@@ -251,7 +252,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       endfor
 
     endif
-
+;    print,i,na
     if ((i mod 1000) eq 0)  then print,string(i,format='(i7)')+' of '+string(na,format='(i7)') +$
       ' ('+string((i*100./na*1.),format='(i3)')+'%)'
   endfor

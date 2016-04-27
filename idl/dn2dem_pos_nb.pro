@@ -59,6 +59,7 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ;                         (Need to optimise L calculation and weighting, provide option to input weighting ??)
   ;   26-Apr-2015  IGH  Added options to change, reg_tweak, rgt_fact and max_iter
   ;   27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
+  ;                     Fixed bug where only the first pixel of dem_norm0 was sent to demmap_pos
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,12 +172,12 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
     for yy=0, ny-1 do begin
       for xx=0, nx-1 do begin
         dem01d[yy*nx+xx,*]=reform(dem0[xx,yy,*])
-        demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
-          dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
-          reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,$
-          dem_norm0=dem01d
       endfor
     endfor
+    demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
+      dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
+      reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,$
+      dem_norm0=dem01d
   endif else begin
     demmap_pos,dn1d,edn1d,RMatrix,logt,dlogt,glc,$
       dem1d,chisq1d,edem1d,elogt1d,dn_reg1d,$
