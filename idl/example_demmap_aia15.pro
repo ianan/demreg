@@ -3,8 +3,8 @@ pro example_demmap_aia15
   ; Example script to recover the DEM from AIA Lvl1.5 fits files
   ; The specific AIA fits used here are not include with the code
   ;
-  ; 14-Apr-2015 IGH
-  ; 27-Apr-2015 IGH   - Changed the naming of the temperatures to make things clearer:
+  ; 14-Apr-2016 IGH
+  ; 27-Apr-2016 IGH   - Changed the naming of the temperatures to make things clearer:
   ;                     tr_logt is the binning of the response function
   ;                     temps is the bin edges you want for the DEM
   ;                     logtemps is the log of the above
