@@ -7,8 +7,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; http://www.astro.gla.ac.uk/~iain/demreg/map/ and Hannah & Kontar 2013 A&A 553
   ;
   ; The original version is the Regularized DEM code from
-  ; Hannah & Kontar 2012 A&A 539 
-  ; http://www.astro.gla.ac.uk/~iain/demreg or 
+  ; Hannah & Kontar 2012 A&A 539
+  ; http://www.astro.gla.ac.uk/~iain/demreg or
   ; https://github.com/ianan/demreg/tree/master/idl_org
   ; Which provides more options (order of constraint matrix, any data type, guess solution) but was slower than the
   ; AIA map version.
@@ -31,7 +31,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;  where the extra bits are the constraint matrix (L) and regularization parameter (lamb).
   ;  L is taken as a "zeroth order" constraint, something like diag(L)=sqrt(dLogT)/sqrt(dem_guess)
   ;  As we might not have an initial dem_guess solution we can find one by running the regularization
-  ;  using diag(L)=1/sqrt(dLogT) and use the output as dem_reg to make a new L and then run the 
+  ;  using diag(L)=1/sqrt(dLogT) and use the output as dem_reg to make a new L and then run the
   ;  regularization a second time
   ;
   ;  The actual regularization is solved via GSVD of K and L.
@@ -86,8 +86,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;
   ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
   ; 25-Apr-2015 IGH - Updated some of the internal variable names and increased comments (though more to do!)
-  ; 27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
-  ;
+  ; 27-Apr-2015 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
+  ; 19-May-2015 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
+  ;                       Also tweaked testing that data in all filters >0 via product()
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -121,11 +122,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
     dn=dnin/ednin
     edn=ednin/ednin
 
-    prd_dn=dn[0]
-    for kk=1,nf-1 do prd_dn=prd_dn*dn[kk]
-
     ; Test if any of the data is 0, if so can just ignore this one
-    if (prd_dn gt 0.) then begin
+    if (product(dn) gt 0.) then begin
       ; reset the positive check
       ndem=1
       piter=0
@@ -134,8 +132,17 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       L=dblarr(nT,nT)
       ; If you have supplied an initial guess/constraint normalized DEM then don't
       ; need to calculate one (either from L=1/sqrt(dLogT) or min of EM loci)
-      if (n_elements(dem_reg) ne nt) then begin
-        if (total(glc) gt 0.) then begin
+      
+      ; Though need to check what you have supplied is correct dimension 
+      ; and no element 0 or less.
+      test_dem_reg=0
+
+      if (n_elements(dem_reg) eq nt) then begin
+        if (product(dem_reg) gt 0) then test_dem_reg=1
+      endif
+      
+      if (test_dem_reg eq 0) then begin
+          if (total(glc) gt 0.) then begin
           ; use the min of the emloci as the initial dem_reg
           gdglc=where(glc gt 0,ngdglc)
           emloci=dblarr(nt,ngdglc)
@@ -164,7 +171,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
           fcofmx=1d-4
           dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
           dem_reg=dem_reg/(fcofmx*max(dr0))
-          ;  Don't need the smoothed version anymore - seems to help with synthetic tests
+          ;  Don't need the smoothed version anymore? - seems to help with synthetic tests
           dem_reg=smooth(dem_reg,3)
         endelse
       endif
@@ -203,18 +210,19 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
         rgt=rgt_fact*rgt
         piter=piter+1
 
-;       IS RECALCULATING DEM_REG FOR THE L AS THE LOOP STARTS AGAIN IMPORTANT?
-;       IT SEEMS THAT IT IS ALL JUST DOWN TO ICREASING RGT TO GET A +VE DEM....
-;        ; just in case we need dem_reg for the next loop and a new L
-;        ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
-;        fcofmx=1d-4
-;        dr0=dem_reg_out
-;        dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
-;        dem_reg=dem_reg/(fcofmx*max(dr0))
-;        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
-;        dem_reg=smooth(dem_reg,3)
-        
-        
+        ;       IS RECALCULATING DEM_REG FOR THE L AS THE LOOP STARTS AGAIN IMPORTANT?
+        ;       IT SEEMS THAT IT IS ALL JUST DOWN TO INCREASING RGT TO GET A +VE DEM....
+        ;       So having the below in doesn't do much other than slow the code down
+        ;        ; just in case we need dem_reg for the next loop and a new L
+        ;        ; only take the positive with ceratin amount (fcofmx) of max, then make rest small positive
+        ;        fcofmx=1d-4
+        ;        dr0=dem_reg_out
+        ;        dem_reg=dr0*(dr0 gt 0 and dr0 gt fcofmx*max(dr0))+1*(dr0 lt 0 or dr0 lt fcofmx*max(dr0))
+        ;        dem_reg=dem_reg/(fcofmx*max(dr0))
+        ;        ;  Don't need the smoothed version anymore - seems to help with synthetic tests
+        ;        dem_reg=smooth(dem_reg,3)
+
+
       endwhile
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -250,11 +258,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
         if (nhmi gt 1) then $
           elogt[i,kk]=(ltt[max(hm_index)]-ltt[min(hm_index)]) >dlogt[kk]
       endfor
-
     endif
-;    print,i,na
-    if ((i mod 1000) eq 0)  then print,string(i,format='(i7)')+' of '+string(na,format='(i7)') +$
-      ' ('+string((i*100./na*1.),format='(i3)')+'%)'
+    if ((i mod 5000) eq 0)  then print,string(i,format='(i7)')+' of '+string(na,format='(i7)') +$
+      ', '+string((i*100./na*1.),format='(f5.1)')+'%'
   endfor
   print,string(100,format='(i3)')+'% Done'
 
