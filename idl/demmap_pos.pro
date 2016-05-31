@@ -84,10 +84,10 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ;                     - don't pass in Lorg anymore
   ;                     - if doing gloci do it using all filters or just the selected via glc ne 0
   ;
-  ; 14-Apr-2015 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
-  ; 25-Apr-2015 IGH - Updated some of the internal variable names and increased comments (though more to do!)
-  ; 27-Apr-2015 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
-  ; 19-May-2015 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
+  ; 14-Apr-2016 IGH - Corrected bug with wrong dem_reg (should be dem_reg_out) being used to calculate dn_reg and chisq
+  ; 25-Apr-2016 IGH - Updated some of the internal variable names and increased comments (though more to do!)
+  ; 27-Apr-2016 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
+  ; 19-May-2016 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
   ;                       Also tweaked testing that data in all filters >0 via product()
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
