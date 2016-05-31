@@ -3,8 +3,8 @@ pro example_demmap_1d
   ; Example script to recover the DEM from AIA single pixel data
   ; The AIA data is synthetic for specified Gaussian DEM model
   ;
-  ; 13-Apr-2015 IGH
-  ; 27-Apr-2015 IGH   - Changed the naming of the temperatures to make things clearer:
+  ; 13-Apr-2016 IGH
+  ; 27-Apr-2016 IGH   - Changed the naming of the temperatures to make things clearer:
   ;                     tr_logt is the binning of the response function
   ;                     temps is the bin edges you want for the DEM
   ;                     logtemps is the log of the above
