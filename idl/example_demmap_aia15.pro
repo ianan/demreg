@@ -9,7 +9,7 @@ pro example_demmap_aia15
   ;                     temps is the bin edges you want for the DEM
   ;                     logtemps is the log of the above
   ;                     mlogt is the mid_point of the above bins
-  ; 28-Apr-2015       - Still testing: not optimised T bins, initial weighting or errors                 
+  ; 28-Apr-2016       - Still testing: not optimised T bins, initial weighting or errors                 
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
