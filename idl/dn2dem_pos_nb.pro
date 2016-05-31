@@ -55,10 +55,10 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ;
   ;
   ;    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ;   13-Apr-2015   IGH   Updated and tidied version to start further development
+  ;   13-Apr-2016 IGH   Updated and tidied version to start further development
   ;                         (Need to optimise L calculation and weighting, provide option to input weighting ??)
-  ;   26-Apr-2015  IGH  Added options to change, reg_tweak, rgt_fact and max_iter
-  ;   27-Apr-2015 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
+  ;   26-Apr-2016 IGH  Added options to change, reg_tweak, rgt_fact and max_iter
+  ;   27-Apr-2016 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
   ;                     Fixed bug where only the first pixel of dem_norm0 was sent to demmap_pos
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
