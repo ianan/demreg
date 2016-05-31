@@ -6,8 +6,8 @@ pro example_demmap_1d_fe18
   ; Also uses the Fe18 pseudo-channel via Del Zanna 2013 A&A [94Å, 171Å, 211Å]
   ;     - it might help as an addition (more with actual data than synthetic?
   ; 
-  ; 13-Apr-2015 IGH
-  ; 27-Apr-2015 IGH   - Changed the naming of the temperatures to make things clearer:
+  ; 13-Apr-2016 IGH
+  ; 27-Apr-2016 IGH   - Changed the naming of the temperatures to make things clearer:
   ;                     tr_logt is the binning of the response function
   ;                     temps is the bin edges you want for the DEM
   ;                     logtemps is the log of the above
