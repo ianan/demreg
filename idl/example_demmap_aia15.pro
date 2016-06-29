@@ -17,6 +17,7 @@ pro example_demmap_aia15
   ; Initial get the data, remove neagtives and rebin to smaller resolution for testing
   ; Also note the int to float for the AIA data is done during the rebinning
   ; If not rebinning still need to do this.
+  ; Assumes you have a directory with some AIA v1.5 fits in it of all six coronal channels
   fdir='~/Downloads/aia15_test_full/'
   waves=['094','131','171','193','211','335']
   nf=n_elements(waves)
@@ -108,12 +109,12 @@ pro example_demmap_aia15
   nyn=n_elements(dn[0,*,0])
   dem_norm0=dblarr(nxn,nyn,nt)
 
-  ; Bad initial normalisation but just testing if the code works
-  for xx=0,nxn-1 do begin
-    for yy=0,nyn-1 do begin
-      dem_norm0[xx,yy,*]=[1e-2,4.2e3,5e3,1e3,1e2,1e-2]
-    endfor
-  endfor
+  ; Rough initial normalisation really just for testing the code
+  ; for xx=0,nxn-1 do begin
+  ;   for yy=0,nyn-1 do begin
+  ;     dem_norm0[xx,yy,*]=[1e-2,4.2e3,5e3,1e3,1e2,1e-2]
+  ;   endfor
+  ; endfor
 
   dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,dem_norm0=dem_norm0
 
@@ -129,13 +130,13 @@ pro example_demmap_aia15
   ;    mdem[i].id=string(logtemps[i],format='(f4.2)')+' to '+string(logtemps[i+1],format='(f4.2)')+' Log!D10!N MK'
   ;  endfor
 
-
-  loadct,39
+  ; loadct,39
 
   !p.multi=[0,3,nt/3]
   ; Plot them all with the same scaling
-  for t=0,nt-1 do plot_image,alog10(dem[*,*,t]),chars=2,max=23,min=19,$
-    title=string(temps[t]*1d-6,format='(f4.1)')+' to '+string(temps[t+1]*1d-6,format='(f4.1)')+' MK'
+  ; needs ssw plot_image for this to work
+  ; for t=0,nt-1 do plot_image,alog10(dem[*,*,t]),chars=2,max=23,min=19,$
+  ;   title=string(temps[t]*1d-6,format='(f4.1)')+' to '+string(temps[t+1]*1d-6,format='(f4.1)')+' MK'
 
   stop
 end
