@@ -89,6 +89,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; 27-Apr-2016 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
   ; 19-May-2016 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
   ;                       Also tweaked testing that data in all filters >0 via product()
+  ; 02-Aug-2016 IGH - Remaned variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg                   
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -116,7 +117,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   for i=0, na-1 do begin
     dnin=reform(dd[i,*])
     ednin=reform(ed[i,*])
-    if ((size(dem_norm0))[0] gt 0) then dem_reg=reform(dem_norm0[i,*])
+    if ((size(dem_norm0))[0] gt 0) then dem_reg_wght=reform(dem_norm0[i,*])
     for kk=0,nf-1 do RMatrixin[*,kk]=RMatrix[*,kk]/eDNin[kk]
 
     dn=dnin/ednin
@@ -137,8 +138,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       ; and no element 0 or less.
       test_dem_reg=0
 
-      if (n_elements(dem_reg) eq nt) then begin
-        if (product(dem_reg) gt 0) then test_dem_reg=1
+      if (n_elements(dem_reg_wght) eq nt) then begin
+        if (product(dem_reg_wght) gt 0) then test_dem_reg=1
       endif
       
       if (test_dem_reg eq 0) then begin
@@ -174,7 +175,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
           ;  Don't need the smoothed version anymore? - seems to help with synthetic tests
           dem_reg=smooth(dem_reg,3)
         endelse
-      endif
+      endif else begin
+        dem_reg=dem_reg_wght
+      endelse
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
