@@ -89,7 +89,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; 27-Apr-2016 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
   ; 19-May-2016 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
   ;                       Also tweaked testing that data in all filters >0 via product()
-  ; 02-Aug-2016 IGH - Remaned variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg                   
+  ; 02-Aug-2016 IGH - Renamed variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg                   
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
