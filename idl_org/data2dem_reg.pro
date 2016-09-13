@@ -82,7 +82,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   ; 02-Nov-2013 added the conversion factors DEM to EM (EM=DEM*DEMtoEM) as output in reg structure
   ; 13-Nov-2013 added warning if any of errors=0 (GSVD will fail as well)
   ; 13-Nov-2013 added test for data=0 when using emloci (replaces 0 with tiny fraction of error)
-  ; 13-Sep-2013 removed nt in demtoem factor (but can manually get just from working out dT)
+  ; 13-Sep-2013 removed nt in demtoem factor and emloci scaling
 
   if (n_elements(order) lt 1) then order=0
   if (n_elements(guess) lt 1) then guess=0
@@ -133,8 +133,8 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
     dd4eml=data
     test_0_data=where(data le 0.,nt0d)
     if (nt0d gt 0) then dd4eml[test_0_data]=1e-6*edata[test_0_data]
-    for ii=0, nf-1 do emloci[*,ii]=4.*!PI*dd4eml[ii]/(TRmatint[*,ii]*nt*10d^logtint*alog(10d^dlogTint))
-    for ii=0, nf-1 do emloci[*,ii]=4.*!PI*data[ii]/(TRmatint[*,ii]*nt*10d^logtint*alog(10d^dlogTint))
+    for ii=0, nf-1 do emloci[*,ii]=dd4eml[ii]/(TRmatint[*,ii]*10d^logtint*alog(10d^dlogTint))
+    for ii=0, nf-1 do emloci[*,ii]=data[ii]/(TRmatint[*,ii]*10d^logtint*alog(10d^dlogTint))
     for jj=0, nt-1 do dem_model[jj]=min(emloci[jj,*])
     dem_model=smooth(dem_model,3)*1d-20
   endif else begin
