@@ -82,7 +82,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   ; 02-Nov-2013 added the conversion factors DEM to EM (EM=DEM*DEMtoEM) as output in reg structure
   ; 13-Nov-2013 added warning if any of errors=0 (GSVD will fail as well)
   ; 13-Nov-2013 added test for data=0 when using emloci (replaces 0 with tiny fraction of error)
-  ;
+  ; 13-Sep-2013 removed nt in demtoem factor (but can manually get just from working out dT)
 
   if (n_elements(order) lt 1) then order=0
   if (n_elements(guess) lt 1) then guess=0
@@ -111,7 +111,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   lgt_edg=get_edges(logTint,/mean)
   lgt_edg=[lgt_edg[0]-(lgt_edg[1]-lgt_edg[0]),lgt_edg,lgt_edg[nt-2]+(lgt_edg[nt-2]-lgt_edg[nt-3])]
   dlgT_edg=lgt_edg[1:nt]-lgt_edg[0:nt-1]
-  DEMtoEM=nt*10d^lgt_edg*alog(10d^dlgt_edg)
+  DEMtoEM=10d^lgt_edg*alog(10d^dlgt_edg)
 
   ; Now intrepolate the response functions to the temperature binning of DEM output
   RMatrix=dblarr(nT,nF)
