@@ -83,6 +83,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   ; 13-Nov-2013 added warning if any of errors=0 (GSVD will fail as well)
   ; 13-Nov-2013 added test for data=0 when using emloci (replaces 0 with tiny fraction of error)
   ; 13-Sep-2013 removed nt in demtoem factor and emloci scaling
+  ; 11-Oct-2016 removed get_edges() call and calculated logT bin-mids directly
 
   if (n_elements(order) lt 1) then order=0
   if (n_elements(guess) lt 1) then guess=0
@@ -108,7 +109,8 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   dlogTint=[dlogTint,dlogTint[nt-2]]
 
   ;Before we begin can work out the conversion factors for DEM to EM
-  lgt_edg=get_edges(logTint,/mean)
+  lgt_edg=fltarr(nt-1)
+  for ll=0,nt-2 do lgt_edg[ll]=(logTint[ll+1]+logTint[ll])*0.5
   lgt_edg=[lgt_edg[0]-(lgt_edg[1]-lgt_edg[0]),lgt_edg,lgt_edg[nt-2]+(lgt_edg[nt-2]-lgt_edg[nt-3])]
   dlgT_edg=lgt_edg[1:nt]-lgt_edg[0:nt-1]
   DEMtoEM=10d^lgt_edg*alog(10d^dlgt_edg)
