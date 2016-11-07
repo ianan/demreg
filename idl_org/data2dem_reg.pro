@@ -200,7 +200,6 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
 
     data_cont_t=fltarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*dem_reg
-    data_cont_t_pos=fltarr(nt,nf)
     for i=0, nf-1 do data_cont_t_pos[*,i]=Rmatrix_org[*,i]*dem_reg_pos
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$
