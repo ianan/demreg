@@ -9,7 +9,11 @@ response/contribution functions to calculate the Differential Emission Measure
 regularized inversion code already included in the xray ssw package (Kontar et
 al 2004 Sol Phys) under $SSW/packages/xray/idl/inversion/.
 
-IGH 18-Nov-2011
+18-Nov-2011 IGH
+
+Update: 08-Nov-2015 IGH
+Note that the DEM code now does not require SSW to run and neither does most of the example
+scripts (i.e. line_example.pro, aia_example.pro and aia_example_new.pro)
 
 ##############################################
 
