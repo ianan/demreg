@@ -5,6 +5,8 @@
 ;; 18-11-2011		 Created 		IGH
 ;; 12-11-2012    Added plotting of DN per T contribution
 ;; 26-04-2015    Calculate DEM Gauss model and errors in the code itself
+;; 08-11-2016    Removed ssw dependent routines - should run with standard IDL
+
 
 ; Need to make the response functions?
 ;if (file_test('aia_respn.dat') eq 0) then tresp=aia_get_response(/temperature,/dn) & save,file='aia_respn.dat',tresp
@@ -57,16 +59,22 @@ reg=data2dem_reg(logT, TRmatrix, dn_in, edn_in,$
   channels=tresp.channels[filt])
 
 ; now to plot the results....
-linecolors
+loadct,39,/silent
 !p.charsize=1.5
 ; plot the regularized DEM and both vertical and horizontal errors
 window,1,xsize=650,ysize=500,title='Regularized DEM'
 !p.multi=0
-ploterr,reg.logt,reg.dem,reg.elogt,reg.edem,$
-  /nohat,errcolor=9,yrange=max(reg.dem)*[1e-3,1.2],$
-  xrange=minmax(reg.logt),xstyle=17,/ylog,$
+;ploterr,reg.logt,reg.dem,reg.elogt,reg.edem,$
+; /nohat,errcolor=150,yrange=max(reg.dem)*[1e-3,1.2],$
+; xrange=[min(reg.logt),max(reg.logt)],xstyle=17,/ylog,$
+; xtitle='log!D10!N T',ytitle='DEM(T) [cm!U-5!N K!U-1!N]'
+
+plot,reg.logt,reg.dem,yrange=max(reg.dem)*[1e-3,1.2],$
+  xrange=[min(reg.logt),max(reg.logt)],xstyle=17,/ylog,$
   xtitle='log!D10!N T',ytitle='DEM(T) [cm!U-5!N K!U-1!N]'
-oplot,logt,dem_mod,color=2
+
+for i=0, n_elements(reg.dem)-1 do oplot,reg.logt[i]+(reg.elogt[i]*[-1,1]),reg.dem[i]*[1,1]
+for i=0, n_elements(reg.dem)-1 do oplot,reg.logt[i]*[1,1],reg.dem[i]+(reg.edem[i]*[-1,1])
 
 window,2,xsize=500,ysize=500,title='DN-space and Residuals'
 !p.multi=[0,1,2]
@@ -75,9 +83,9 @@ plot,indgen(nf),reg.data,/ylog,psym=6,$
   xrange=[-1,nf],xtickf='(a1)',xticks=nf+1,ystyle=16,thick=3,$
   ytit='DN s!U-1!N',xtit=' ',/nodata,$
   yrange=[0.9*min(reg.data),1.1*max(reg.data)]
-oplot,indgen(nf),reg.data_reg,psym=6,color=5,thick=1
-oplot,indgen(nf),reg.data,psym=7,color=2,thick=2
-for i=0, nf-1 do oplot, [i,i],reg.data[i]+[-reg.edata[i],reg.edata[i]],thick=5,color=2
+oplot,indgen(nf),reg.data_reg,psym=6,color=150,thick=1
+;oplot,indgen(nf),reg.data,psym=7,thick=2
+for i=0, nf-1 do oplot, [i,i],reg.data[i]+(reg.edata[i]*[-1,1]),thick=1
 
 maxr=1.1*max(abs(reg.residuals))
 plot,indgen(nf),reg.residuals,xrange=[-1,nf],xtickn=[' ',reg.channels,' '],$
