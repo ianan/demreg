@@ -1,5 +1,6 @@
 pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
-  min_snr=min_snr,sat_lvl=sat_lvl,tempdir=tempdir,respdir=respdir, use_diw=use_diw
+  min_snr=min_snr,sat_lvl=sat_lvl,serr_per=serr_per,$
+  tempdir=tempdir,respdir=respdir, use_diw=use_diw
 
   ; Example to produce full disk DEM map from synoptic AIA data for a given day, hour, mins
   ;
@@ -14,6 +15,7 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   ; sat_lvl         use pixels with DN/px less than this value (default 15,000)
   ;                     Note that streaks from a saturated region won't be removed unless >sat_lvl
   ; use_diw         use an initial DEM weighting at start of calc (defaul 0, no)
+  ; serr_per        add a systematic uncertainty (%) to the data (default is 0%)
   ;
   ; Todos:
   ;   ***   If badly saturated date or noisy (very small ind.exptime) then automatically use neighbouring time instead?
@@ -50,6 +52,9 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   ; Ignore data with values above this level
   ; This is the default AIA saturation of >15,000 DN/px
   if (n_elements(sat_lvl) lt 1) then sat_lvl=1.5e4
+  
+  ;Systematic uncertainty (in % terms) to add to the data
+  if (n_elements(serr_per) lt 1) then serr_per=0.0
 
   ; Where to store the synoptic images downloaded from jsoc?
   if (n_elements(temp_dir) ne 1) then temp_dir=curdir()+'/temp/'
@@ -125,8 +130,12 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   drknse=0.17
   qntnse=0.288819*sqrt(npix)/npix
   ; error in DN/px
-  for i=0, nf-1 do edata[*,*,i]=sqrt(rdnse^2.+drknse^2.+qntnse^2.+(dn2ph[i]*abs(data[*,*,i]))/(npix*dn2ph[i]^2))
-
+  for i=0, nf-1 do begin
+    etemp=sqrt(rdnse^2.+drknse^2.+qntnse^2.+(dn2ph[i]*abs(data[*,*,i]))/(npix*dn2ph[i]^2))
+    esys=serr_per*data[*,*,i]/100.
+    edata[*,*,i]=sqrt(etemp^2. + esys^2.)
+  endfor
+  
   ; Get rid of data with too large an uncertaintity
   id=where(data/edata le min_snr,nid)
   if (nid gt 1) then data[id]=0.0
