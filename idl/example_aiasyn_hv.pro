@@ -1,6 +1,6 @@
 pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   min_snr=min_snr,sat_lvl=sat_lvl,serr_per=serr_per,$
-  tempdir=tempdir,respdir=respdir, use_diw=use_diw
+  tempdir=tempdir,respdir=respdir, use_diw=use_diw,em=em
 
   ; Example to produce full disk DEM map from synoptic AIA data for a given day, hour, mins
   ;
@@ -16,11 +16,11 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   ;                     Note that streaks from a saturated region won't be removed unless >sat_lvl
   ; use_diw         use an initial DEM weighting at start of calc (defaul 0, no)
   ; serr_per        add a systematic uncertainty (%) to the data (default is 0%)
+  ; em              final maps in cm^-5 instead of cm^-5 K^-1
   ;
   ; Todos:
-  ;   ***   If badly saturated date or noisy (very small ind.exptime) then automatically use neighbouring time instead?
+  ;   ***   If badly saturated data or noisy (very small ind.exptime) then automatically use neighbouring time instead?
   ;   ***   Re-bridge the DEM code to speed things up again ?
-  ;   ***   Convert the DEM [cm^-5 K^-1] to EMD [cm^-5] before plotting?
   ;   ***   Best initial DEM weighting to use (if any ??)
   ;   ***   Remove DEMs with large uncertainties?
   ;   ***   Average/interpolate the temperature bins?
@@ -28,22 +28,23 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   ;
   ; May 2016      IGH   Started
   ; 17-Nov-2016   IGH   Tidied up code and added comments
+  ; 18-Nov-2016   IGH   Added option for EM output via /em
   ;
   ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ;  ;   About X3, Impulsive start of X-flare
-  ;  if (n_elements(day) ne 1) then day='24-Oct-2014'
-  ;  if (n_elements(hour) ne 1) then hour='21'
-  ;  if (n_elements(mins) ne 1) then mins='26'
+;    if (n_elements(day) ne 1) then day='24-Oct-2014'
+;    if (n_elements(hour) ne 1) then hour='21'
+;    if (n_elements(mins) ne 1) then mins='26'
 
   ; About B7, few  ARs, day of C-flares
-  ;  if (n_elements(day) ne 1) then day='25-Dec-2015'
+    if (n_elements(day) ne 1) then day='25-Dec-2015'
+    if (n_elements(hour) ne 1) then hour='12'
+    if (n_elements(mins) ne 1) then mins='00'
+
+  ;  ; About A5, quiet day
+  ;  if (n_elements(day) ne 1) then day='01-Jul-2010'
   ;  if (n_elements(hour) ne 1) then hour='12'
   ;  if (n_elements(mins) ne 1) then mins='00'
-
-  ; About A5, quiet day
-  if (n_elements(day) ne 1) then day='01-Jul-2010'
-  if (n_elements(hour) ne 1) then hour='12'
-  if (n_elements(mins) ne 1) then mins='00'
 
   date=day+' '+hour+':'+mins+':00'
 
@@ -52,7 +53,7 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
   ; Ignore data with values above this level
   ; This is the default AIA saturation of >15,000 DN/px
   if (n_elements(sat_lvl) lt 1) then sat_lvl=1.5e4
-  
+
   ;Systematic uncertainty (in % terms) to add to the data
   if (n_elements(serr_per) lt 1) then serr_per=0.0
 
@@ -135,7 +136,7 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
     esys=serr_per*data[*,*,i]/100.
     edata[*,*,i]=sqrt(etemp^2. + esys^2.)
   endfor
-  
+
   ; Get rid of data with too large an uncertaintity
   id=where(data/edata le min_snr,nid)
   if (nid gt 1) then data[id]=0.0
@@ -206,15 +207,35 @@ pro example_aiasyn_hv,day=day,hour=hour,min=mins,$
 
   ; Convert the DEM output into maps
   dem_maps=replicate(make_map(fltarr(nx,ny),xc=xc,yc=yc,dx=dx,dy=dy,date=date),nt)
-  dem_maps.data=dem
+
+  ; Want the final map to be in cm^-5 (EM) or cm^-5 K^-1 (DEM)
+  if keyword_set(em) then begin
+    dt=fltarr(nt)
+    for i=0,nt-1 do dt[i]=10d^(logtemps[i+1])-10d^(logtemps[i])
+    em=dblarr(nx,ny,nt)
+    for xx=0,nx-1 do begin
+      for yy=0,ny-1 do begin
+        em[xx,yy,*]=dem[xx,yy,*]*dt
+      endfor
+    endfor
+    dem_maps.data=em
+    idd='EM '
+  endif else begin
+    dem_maps.data=dem
+    idd='DEM '
+  endelse
+
   temp_ids=strarr(nt)
   for i=0,nt-1 do temp_ids[i]=string(logtemps[i],format='(f3.1)')+' - '+string(logtemps[i+1],format='(f3.1)')
-  dem_maps.id='logT: '+temp_ids
+  dem_maps.id=idd+'logT: '+temp_ids
 
   ; plot them - assuming using default 16 temp bins and no interpolating
   !p.multi=[0,4,4]
   loadct,5,/silent
-  for i=0,nt-1 do plot_map,dem_maps[i],title=dem_maps[i].id,/log,dmin=1d19,dmax=1d23,chars=2.0
+  
+  if keyword_set(em) then drang=[1d25,1d30] else drang=[1d19,1d23]
+  
+  for i=0,nt-1 do plot_map,dem_maps[i],title=dem_maps[i].id,/log,dmin=drang[0],dmax=drang[1],chars=2.0
   xyouts,10,10,date,chars=1.2,/device
 
   stop
