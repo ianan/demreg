@@ -84,6 +84,9 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   ; 13-Nov-2013 added test for data=0 when using emloci (replaces 0 with tiny fraction of error)
   ; 13-Sep-2013 removed nt in demtoem factor and emloci scaling
   ; 11-Oct-2016 removed get_edges() call and calculated logT bin-mids directly
+  ; 20-Dec-2017 minor bug fix for missing data_cont_t_pos definition
+  ;
+  ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   if (n_elements(order) lt 1) then order=0
   if (n_elements(guess) lt 1) then guess=0
@@ -200,6 +203,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
 
     data_cont_t=fltarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*dem_reg
+    data_cont_t_pos=fltarr(nt,nf)
     for i=0, nf-1 do data_cont_t_pos[*,i]=Rmatrix_org[*,i]*dem_reg_pos
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$
