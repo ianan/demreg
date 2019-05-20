@@ -6,11 +6,11 @@
 ;; 12-11-2012    Added plotting of DN per T contribution
 ;; 26-04-2015    Calculate DEM Gauss model and errors in the code itself
 ;; 08-11-2016    Removed ssw dependent routines - should run with standard IDL
-
+;; 20-05-2019    Minor update: must use the timedepend_date option when getting aia response                
 
 ; Need to make the response functions?
-;if (file_test('aia_respn.dat') eq 0) then tresp=aia_get_response(/temperature,/dn) & save,file='aia_respn.dat',tresp
-restore,file='aia_respn.dat'
+if (file_test('aia_resp.dat') eq 0) then tresp=aia_get_response(/temperature,/dn,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
+restore,file='aia_resp.dat'
 
 ; ; order of filters to use
 ;; don't want 304

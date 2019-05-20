@@ -9,7 +9,8 @@ pro example_demmap_aia15
   ;                     temps is the bin edges you want for the DEM
   ;                     logtemps is the log of the above
   ;                     mlogt is the mid_point of the above bins
-  ; 28-Apr-2016       - Still testing: not optimised T bins, initial weighting or errors                 
+  ; 28-Apr-2016       - Still testing: not optimised T bins, initial weighting or errors  
+  ; 20-May-2019 IGH   - Minor update: must use the timedepend_date option when getting aia response                
   ;
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +85,7 @@ pro example_demmap_aia15
 
   ; Need to make the response functions?
   if (file_test('aia_resp.dat') eq 0) then begin
-    tresp=aia_get_response(/temperature,/dn,/chianti,/noblend,/evenorm)
+    tresp=aia_get_response(/temperature,/dn,/chianti,/noblend,/evenorm,timedepend_date='01-Jul-2010')
     save,file='aia_resp.dat',tresp
   endif else begin
     restore,file='aia_resp.dat'
