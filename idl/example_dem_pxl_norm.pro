@@ -1,7 +1,9 @@
-pro example_demmap_1d
+pro example_dem_pxl_norm
 
   ; Example script to recover the DEM from AIA single pixel data
   ; The AIA data is synthetic for specified Gaussian DEM model
+  ;
+  ; This version plays about with you specifiying the initial normalised guess
   ;
   ; 13-Apr-2016 IGH
   ; 27-Apr-2016 IGH   - Changed the naming of the temperatures to make things clearer:
@@ -10,6 +12,8 @@ pro example_demmap_1d
   ;                     logtemps is the log of the above
   ;                     mlogt is the mid_point of the above bins
   ; 20-May-2019 IGH   - Minor update: must use the timedepend_date option when getting aia response   
+  ; 15-Aug-2019 IGH   - Renamed from _1D to _pxl to better reflect what this example code does 
+  ;                     Changed file name *_demmap_* to *_map_*
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -27,6 +31,7 @@ pro example_demmap_1d
   ; This is is the temperature bin mid-points
   mlogt=get_edges(logtemps,/mean)
 
+
   ; Need to make the response functions?
   if (file_test('aia_resp.dat') eq 0) then begin
     tresp=aia_get_response(/temperature,/dn,/chianti,/noblend,/evenorm,timedepend_date='01-Jul-2010')
@@ -34,7 +39,7 @@ pro example_demmap_1d
   endif else begin
     restore,file='aia_resp.dat'
   endelse
-  
+
   ; Only want the coronal ones without 304A
   idc=[0,1,2,3,4,6]
 
@@ -60,10 +65,14 @@ pro example_demmap_1d
   shotnoise=sqrt(dn2ph*dn0)/dn2ph/2.9
   ; error in DN/s/px
   edn=sqrt(rdnse^2+shotnoise^2)
-  
-  dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,/gloci,glcindx=[0,1,1,1,1,1]
 
-  yr=d1*[5e-3,1e1]
+  dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,$
+    dem,edem,elogt,chisq,dn_reg,/timed
+
+  dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,$
+    dem1,edem1,elogt1,chisq1,dn_reg1,/timed,dem_norm0=dem_mod/max(dem_mod)
+
+  yr=d1*[5e-4,1e1]
   !p.thick=2
   plot,tr_logt,dem_mod,/ylog,chars=2,xtit='Log!D10!N T', ytit='DEM [cm!U-5!N K!U-1!N]',yrange=yr,ystyle=17,xstyle=17
   loadct,39,/silent
@@ -71,6 +80,14 @@ pro example_demmap_1d
   demax=(dem+edem) < yr[1]
   demin=(dem-edem) > yr[0]
   for i=0,n_elements(mlogt)-1 do oplot, mlogt[i]*[1,1],[demin[i],demax[i]],color=250
+
+  for i=0,n_elements(mlogt)-1 do oplot,logtemps[i:i+1],dem1[i]*[1,1],color=90
+  demax1=(dem1+edem1) < yr[1]
+  demin1=(dem1-edem1) > yr[0]
+  for i=0,n_elements(mlogt)-1 do oplot, mlogt[i]*[1,1],[demin1[i],demax1[i]],color=90
+  
+  xyouts, tr_logt[0]+0.1,1.5*yr[1],'AIA 6',color=250,/data,chars=2
+  xyouts, tr_logt[0]+0.5,1.5*yr[1],'AIA 6 + DEM_NORM0',color=90,/data,chars=2
 
   stop
 end

@@ -1,4 +1,4 @@
-pro example_demmap_1d_fe18
+pro example_dem_pxl_fe18
 
   ; Example script to recover the DEM from AIA single pixel data
   ; The AIA data is synthetic for specified Gaussian DEM model
@@ -13,13 +13,15 @@ pro example_demmap_1d_fe18
   ;                     logtemps is the log of the above
   ;                     mlogt is the mid_point of the above bins
   ; 20-May-2019 IGH   - Minor update: must use the timedepend_date option when getting aia response   
+  ; 15-Aug-2019 IGH   - Renamed from _1D to _pxl to better reflect what this example code does
+  ;                     Changed file name *_demmap_* to *_map_* 
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Gaussian DEM model parameters
   d1=4d22
-  m1=6.4
-  s1=0.1
+  m1=6.5
+  s1=0.15
 
  ; What temperature binning do you want of the DEM?
   ; These are the bin edges

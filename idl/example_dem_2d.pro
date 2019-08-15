@@ -1,4 +1,4 @@
-pro example_demmap_2d
+pro example_dem_2d
 
   ; Example script to recover the DEM from AIA array of data
   ; The AIA data is synthetic for specified Gaussian DEM model
@@ -10,6 +10,7 @@ pro example_demmap_2d
   ;                     logtemps is the log of the above
   ;                     mlogt is the mid_point of the above bins
   ; 20-May-2019 IGH   - Minor update: must use the timedepend_date option when getting aia response   
+  ; 15-Aug-2019 IGH   - Changed file name *_demmap_* to *_map_*
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,7 +99,7 @@ pro example_demmap_2d
   for i=0, n_elements(mlogt)-1 do oplot,mlogt[i]*[1,1],dem[x,y,i]+edem[x,y,i]*[-1.,1.],color=200
   oplot,tr_logt,demmods[x,y,*],color=120
 
-  print,reform(dem[x,y,*])
+;  print,reform(dem[x,y,*])
 
 
   stop

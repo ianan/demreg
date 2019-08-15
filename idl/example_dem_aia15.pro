@@ -1,4 +1,4 @@
-pro example_demmap_aia15
+pro example_dem_aia15
 
   ; Example script to recover the DEM from AIA Lvl1.5 fits files
   ; The specific AIA fits used here are not include with the code
@@ -11,11 +11,11 @@ pro example_demmap_aia15
   ;                     mlogt is the mid_point of the above bins
   ; 28-Apr-2016       - Still testing: not optimised T bins, initial weighting or errors  
   ; 20-May-2019 IGH   - Minor update: must use the timedepend_date option when getting aia response                
-  ;
+  ; 15-Aug-2019 IGH   - Changed file name *_demmap_* to *_map_*
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  ; Initial get the data, remove neagtives and rebin to smaller resolution for testing
+  ; Initial get the data, remove negatives and rebin to smaller resolution for testing
   ; Also note the int to float for the AIA data is done during the rebinning
   ; If not rebinning still need to do this.
   ; Assumes you have a directory with some AIA v1.5 fits in it of all six coronal channels
