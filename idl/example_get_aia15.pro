@@ -1,7 +1,9 @@
 pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
 
-  ; Example script to get and prep some AIA Lvl1.5 fits files
+  ; Example script to get and prep some AIA lvl1.5 fits files
   ; Output of this code can be used with example_dem_aia15
+  ; 
+  ; Note - occasionally need to .r vso_get before compiling this code (dont know why)
   ;
   ; Option:
   ;   vso_get   Need to get some files (default no)
@@ -19,11 +21,11 @@ pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
   ; Deafult setup of what to do
   vso_get=0
   prep_aia=0
-
+  
   ; Get some AIA data from vso
   if keyword_set(vso_get) then begin
     ; Do the vso search for sdo/aia over the time
-    ; The wave search filter can only do min to max, so will recover 304 which don't want (optically thick)
+    ; The wave search filter can only do min to max, so will recover 304 which do not want (optically thick)
     ss = vso_search(tt[0],tt[1], source='sdo',instr='aia',wave='94-335')
     ss = ss[where(ss.wave.min ne 304.)]
 
@@ -31,8 +33,7 @@ pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
     ss=ss[uniq(ss.wave.min)]
 
     ; Get the data and put it somewhere
-
-    status=vso_get(ss,out_dir=out_dir,/rice,site='NSO')
+    status=vso_get(ss, out_dir=out_dir,/rice,sire='NSO')
   endif
 
   ; Prep the aia data and save out as a single fits
@@ -41,7 +42,7 @@ pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
     files=file_search(out_dir, '*.fits')
     read_sdo,files,ind,data
 
-    aia_prep,ind,data,indp,datap
+    aia_prep,ind,data,indp,datap,/use_hdr_pnt
     sid=sort(indp.wavelnth)
 
     index2map,indp,datap > 0.,maps
@@ -69,8 +70,12 @@ pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
   !p.multi=[0,3,2]
   for i=0, 5 do begin
     aia_lct,wave=wvid[i],/load
-    plot_map,mapsr[i],/log,charsize=2,dmin=0.5*median(mapsr[i].data),dmax=0.8*max(mapsr[i].data),title=wvid[i]+STRING(197B)
+    plot_map,mapsr[i],/log,charsize=2,$
+      dmin=0.5*median(mapsr[i].data),dmax=0.8*max(mapsr[i].data),$
+      title=wvid[i]+STRING(197B)
   endfor
+  
+  map2fits,mapsr,out_dir+'test_maps_rebin_20151225.fits'
 
 
   stop

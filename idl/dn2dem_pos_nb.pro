@@ -51,13 +51,13 @@ pro dn2dem_pos_nb, dn_in, edn_in,tresp,tresp_logt,temps,$
   ;   rgt_fact -  Multiplying factor of how much to increase reg tweak each iteration when trying to make positive (default 1.5, shouldn't be more than a few)
   ;   max_iter -  Max number of iterations to try and get a positive solution (default 10)
   ;
-  ;  dem_norm0 - Initial guess/constraing/weighting DEM, normalised and array of (nx,ny,nt)
+  ;   dem_norm0 - Initial guess/constraing/weighting DEM, normalised and array of (nx,ny,nt)
   ;
   ;
   ;    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ;   13-Apr-2016 IGH   Updated and tidied version to start further development
   ;                         (Need to optimise L calculation and weighting, provide option to input weighting ??)
-  ;   26-Apr-2016 IGH  Added options to change, reg_tweak, rgt_fact and max_iter
+  ;   26-Apr-2016 IGH   Added options to change, reg_tweak, rgt_fact and max_iter
   ;   27-Apr-2016 IGH   Added in option to supply initial guess/constraint normalized DEM to weight L
   ;                     Fixed bug where only the first pixel of dem_norm0 was sent to demmap_pos
   ;
