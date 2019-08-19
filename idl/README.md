@@ -5,7 +5,7 @@ This directory contains the latest version of the regularised inversion DEM code
 It is based on the mapping version of the DEM reg code (http://www.astro.gla.ac.uk/~iain/demreg/map/) - it works but is still occassionally being worked on/tweaked.
 
 The improvements over the older code are:
-* Works with any instrument, not just SDO/AIA, just need the user to supply the data and corresponding temperature response function
+* Works with any instrument - just supply the data and corresponding temperature response functions
 * Can work data of various dimensions - a single pixel/data set or an array/map of pixels
 * Some bug fixes to remove outlier cases where NaNs are returned
 
