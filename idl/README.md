@@ -2,7 +2,7 @@
 
 This directory contains the latest version of the regularised inversion DEM code. 
 
-It is based from the mapping version of the DEM reg code http://www.astro.gla.ac.uk/~iain/demreg/map/ working but still occassionally being worked on/tweaked.
+It is based on the mapping version of the DEM reg code (http://www.astro.gla.ac.uk/~iain/demreg/map/) - it works but is still occassionally being worked on/tweaked.
 
 The improvements over the older code are:
 * Works with any instrument, not just SDO/AIA, just need the user to supply the data and corresponding temperature response function
@@ -17,6 +17,3 @@ Code:
 * example_*.pro - Examples using a variety of synthetic or real data
 * dem2dn.pro - Used by example codes to synthesize DN from model DEMs
 * aia_resp* - IDL save files of AIA temperature responses, used by example codes
-
-
-
