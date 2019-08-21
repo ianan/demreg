@@ -33,7 +33,7 @@ pro example_get_aia15, vso_get=vso_get, prep_aia=prep_aia
     ss=ss[uniq(ss.wave.min)]
 
     ; Get the data and put it somewhere
-    status=vso_get(ss, out_dir=out_dir,/rice,sire='NSO')
+    status=vso_get(ss, out_dir=out_dir,/rice,site='NSO')
   endif
 
   ; Prep the aia data and save out as a single fits
