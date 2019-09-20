@@ -89,7 +89,8 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; 27-Apr-2016 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
   ; 19-May-2016 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
   ;                       Also tweaked testing that data in all filters >0 via product()
-  ; 02-Aug-2016 IGH - Renamed variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg                   
+  ; 02-Aug-2016 IGH - Renamed variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg      
+  ; 20-Sep-2019 IGH - Added check for Nan/Inf as well as 0s before doing the calculation             
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -124,7 +125,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
     edn=ednin/ednin
 
     ; Test if any of the data is 0, if so can just ignore this one
-    if (product(dn) gt 0.) then begin
+;    if (product(dn) gt 0.) then begin
+    ; Added extra text in case any of the data is NaNs or Infs
+    if (product(dn,/nan) gt 0. and product(finite(dn)) gt 0.) then begin
       ; reset the positive check
       ndem=1
       piter=0
