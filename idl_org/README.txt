@@ -14,11 +14,15 @@ al 2004 Sol Phys) under $SSW/packages/xray/idl/inversion/.
 Update: 08-Nov-2015 IGH
 Note that the DEM code now does not require SSW to run and neither does most of the example
 scripts (i.e. line_example.pro, aia_example.pro and aia_example_new.pro)
+Update: 19-Geb-2020 IGH 
+EMD version now available - calculation done in EMD [cm^5] instead of DEM [cm^5 K^-1]
 
 ##############################################
 
 The main driver programs is:
 data2dem_reg.pro
+or
+data2em_reg.pro if want EMD solution
 
 ##############################################
 
