@@ -42,39 +42,39 @@
 
 pro dem_inv_reg_resolution,Alpha,Betta,opt,w,logT,dT,fwhm, cent,RK,fwhm2
 
-M=n_elements(Alpha)
+  M=n_elements(Alpha)
 
-Filter=fltarr(M,M)
-For i=0, M-1 do Filter[i,i]=alpha[i]^2/(alpha[i]^2+opt*betta[i]^2)
+  Filter=fltarr(M,M)
+  For i=0, M-1 do Filter[i,i]=alpha[i]^2/(alpha[i]^2+opt*betta[i]^2)
 
-RK =w##(Filter##invert(w))
+  RK =w##(Filter##invert(w))
 
-FWHM=fltarr(M)
-FWHM2=fltarr(M)
-cent=fltarr(M)
+  FWHM=fltarr(M)
+  FWHM2=fltarr(M)
+  cent=fltarr(M)
 
-ltt=min(logt)+(max(logt)-min(logt))*findgen(1001)/(1001-1.0)
+  ltt=min(logt)+(max(logt)-min(logt))*findgen(1001)/(1001-1.0)
 
-for i=0, M-1 do BEGIN
+  for i=0, M-1 do BEGIN
 
-	rr=interpol(transpose(RK[i,*]),logt,ltt)
-	; where is the row bigger than the half maximum
-	hm_index=where(rr ge max(RK[i,*])/2.,nhmi)
+    rr=interpol(transpose(RK[i,*]),logt,ltt)
+    ; where is the row bigger than the half maximum
+    hm_index=where(rr ge max(RK[i,*])/2.,nhmi)
 
-	;if fewer than 2 temperature bins just set FWHM as 1.5dt
-	fwhm[i]=1.5*dt[i]
-	fwhm2[i]=1.5*dt[i]
-	if (nhmi gt 1) then begin
-		fwhm[i]=(ltt[max(hm_index)]-ltt[min(hm_index)]) >dt[i]
-		fwhm2[i]=2*max([abs(logt[i]-ltt[min(hm_index)]),abs(logt[i]-ltt[max(hm_index)])])
-	endif
-		
-	; also stored the assumed centorid
-	; if the regularisation worked at this temperature this shold be the diagional values
-	; i.e. roughly the same logT and this temperature bin
-	if (nhmi ge 1 ) then cent[i]=ltt[mean(hm_index)]
+    ;if fewer than 2 temperature bins just set FWHM as 1.5dt
+    fwhm[i]=1.5*dt[i]
+    fwhm2[i]=1.5*dt[i]
+    if (nhmi gt 1) then begin
+      fwhm[i]=(ltt[max(hm_index)]-ltt[min(hm_index)]) >dt[i]
+      fwhm2[i]=2*max([abs(logt[i]-ltt[min(hm_index)]),abs(logt[i]-ltt[max(hm_index)])])
+    endif
 
-endfor
+    ; also stored the assumed centorid
+    ; if the regularisation worked at this temperature this shold be the diagional values
+    ; i.e. roughly the same logT and this temperature bin
+    if (nhmi ge 1 ) then cent[i]=ltt[mean(hm_index)]
+
+  endfor
 
 end
 

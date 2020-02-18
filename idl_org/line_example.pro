@@ -12,7 +12,7 @@
 restore,file='con_func_9.dat'
 
 ; ; line intensities in erg/cm^2/s/sr
-;; these intesities for the lines in cf are from the CHIANTI /qs DEM model 
+;; these intesities for the lines in cf are from the CHIANTI /qs DEM model
 line_in=[489.7,  267.5, 4.9,  77.4, 67.2,  26.5,  47.1,  235.9, 6.9]
 
 ; ; error in erg/cm^2/s/sr
@@ -37,10 +37,10 @@ gloci=0
 
 ; run the regularization
 reg=data2dem_reg(logT, CFmatrix, line_in, eline_in,$
- 	mint=5.0, maxt=6.7, nt=50, $
-	order=order,reg_tweak=reg_tweak, guess=guess, $
-	channels=cf.line,gloci=gloci)
-	
+  mint=5.0, maxt=6.7, nt=50, $
+  order=order,reg_tweak=reg_tweak, guess=guess, $
+  channels=cf.line,gloci=gloci)
+
 ; now to plot the results....
 loadct,39
 !p.charsize=1.5
@@ -61,26 +61,26 @@ for i=0, n_elements(reg.dem)-1 do oplot,reg.logt[i]*[1,1],reg.dem[i]+(reg.edem[i
 ;dem_mod=aia_bp_read_dem(/qs)
 ;oplot,dem_mod.logte,10d^dem_mod.logdem,color=3,thick=2
 
-window,2,xsize=500,ysize=500,title='Line Intensities and Residuals'	
+window,2,xsize=500,ysize=500,title='Line Intensities and Residuals'
 !p.multi=[0,1,2]
 loadct,39,/silent
 nf=n_elements(reg.channels)
 plot,indgen(nf),reg.data,/ylog,psym=6,$
-	xrange=[-1,nf],xtickf='(a1)',xticks=nf+1,ystyle=16,thick=3,$
-	ytit='Line Intensities',xtit=' ',/nodata,$
-	yrange=[0.9*min(reg.data),1.1*max(reg.data)]
+  xrange=[-1,nf],xtickf='(a1)',xticks=nf+1,ystyle=16,thick=3,$
+  ytit='Line Intensities',xtit=' ',/nodata,$
+  yrange=[0.9*min(reg.data),1.1*max(reg.data)]
 oplot,indgen(nf),reg.data_reg,psym=6,color=150,thick=1
 ;oplot,indgen(nf),reg.data,psym=7,thick=2
 for i=0, nf-1 do oplot, [i,i],reg.data[i]+(reg.edata[i]*[-1,1]),thick=1
 
 maxr=1.1*max(abs(reg.residuals))
 plot,indgen(nf),reg.residuals,xrange=[-1,nf],xtickn=[' ',reg.channels,' '],$
-	xticks=nf+1,ystyle=17,thick=1,yrange=maxr*[-1,1],psym=6,$
-	ytit='Residuals',xtit='Line'
+  xticks=nf+1,ystyle=17,thick=1,yrange=maxr*[-1,1],psym=6,$
+  ytit='Residuals',xtit='Line'
 oplot,[-2,nf],[0,0],lines=1
 xyouts,-0.5,.75*maxr,'chisq='+string(reg.chisq,format='(f4.1)'),/data
 
-window,3,xsize=800,ysize=500,title='RK Matrix'	
+window,3,xsize=800,ysize=500,title='RK Matrix'
 !p.multi=[0,2,1]
 loadct,8,/silent
 gamma_ct,2.

@@ -62,32 +62,32 @@
 ;-
 
 pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
-;; Generalised Singular Value Decomposition with double precision ariphmetics
+  ;; Generalised Singular Value Decomposition with double precision ariphmetics
 
 
-AB1=A##invert(B,/DOUBLE)
-; when B is a square matrix
+  AB1=A##invert(B,/DOUBLE)
+  ; when B is a square matrix
 
-SVDC, AB1,S,U,V,/double
-; using SVDC routine
-Gamma=S
-Gamma=S[REVERSE(SORT(S))]
-U    =U(REVERSE(SORT(S)),*)
-V    =V(REVERSE(SORT(S)),*)
-Sigma=Gamma
+  SVDC, AB1,S,U,V,/double
+  ; using SVDC routine
+  Gamma=S
+  Gamma=S[REVERSE(SORT(S))]
+  U    =U(REVERSE(SORT(S)),*)
+  V    =V(REVERSE(SORT(S)),*)
+  Sigma=Gamma
 
-Betta=1.D0/sqrt(1.D0+Sigma*Sigma)
-Alpha=Sigma*betta
-;singular values
+  Betta=1.D0/sqrt(1.D0+Sigma*Sigma)
+  Alpha=Sigma*betta
+  ;singular values
 
-OneB=dblarr(N_elements(Sigma),N_elements(Sigma))
-OneA=dblarr(N_elements(Sigma),N_elements(Sigma))
+  OneB=dblarr(N_elements(Sigma),N_elements(Sigma))
+  OneA=dblarr(N_elements(Sigma),N_elements(Sigma))
 
-for i=0, N_elements(Sigma)-1 DO OneB(i,i)=betta(i)
-for i=0, N_elements(Sigma)-1 DO OneA(i,i)=alpha(i)
-; scaling
+  for i=0, N_elements(Sigma)-1 DO OneB(i,i)=betta(i)
+  for i=0, N_elements(Sigma)-1 DO OneA(i,i)=alpha(i)
+  ; scaling
 
-W=invert(invert(oneB)##transpose(V)##B)
-;finding W (not the best way)
+  W=invert(invert(oneB)##transpose(V)##B)
+  ;finding W (not the best way)
 
 end

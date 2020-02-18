@@ -52,56 +52,56 @@
 
 
 pro dem_inv_reg_parameter,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt
-;calculates regularisation parameter
+  ;calculates regularisation parameter
 
- Nmu=9900
+  Nmu=9900
 
- Ndata=n_elements(Data)
- Nreg =n_elements(SigmaA)
+  Ndata=n_elements(Data)
+  Nreg =n_elements(SigmaA)
 
- arg=dblarr(Nreg,Nmu)
- arg2=dblarr(Nreg,Nmu)
- discr=dblarr(Nmu)
+  arg=dblarr(Nreg,Nmu)
+  arg2=dblarr(Nreg,Nmu)
+  discr=dblarr(Nmu)
 
- maxx=max(SigmaA/SigmaB)*1d3
- minx=max(SigmaA/SigmaB)*1d-15
+  maxx=max(SigmaA/SigmaB)*1d3
+  minx=max(SigmaA/SigmaB)*1d-15
 
- step=(alog(maxx)-alog(minx))/(Nmu-1.)
- mu=exp(findgen(Nmu)*step)*minx
+  step=(alog(maxx)-alog(minx))/(Nmu-1.)
+  mu=exp(findgen(Nmu)*step)*minx
 
- omega=invert(w)##dem_guess
+  omega=invert(w)##dem_guess
 
- for k=0,Ndata-1 do begin
-	coef=data##u[k,*]-SigmaA[k]*omega[k]
-	for i=0,Nmu-1 do begin
-		arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/(SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2
-	end
-	arg2[k,*]=sqrt(arg[k,*])/Err[k]
- end
+  for k=0,Ndata-1 do begin
+    coef=data##u[k,*]-SigmaA[k]*omega[k]
+    for i=0,Nmu-1 do begin
+      arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/(SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2
+    end
+    arg2[k,*]=sqrt(arg[k,*])/Err[k]
+  end
 
-discr=total(arg,1)-total(err*err)*reg_tweak
+  discr=total(arg,1)-total(err*err)*reg_tweak
 
-minimum=min(abs(discr),Min_index)
-opt=mu[Min_index]
+  minimum=min(abs(discr),Min_index)
+  opt=mu[Min_index]
 
-SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
-Data_U=abs(data##u)
-C=data_u*SV
+  SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
+  Data_U=abs(data##u)
+  C=data_u*SV
 
-;****************************************************************************************
-;window,4,xsize=600,ysize=600,title='Regularization parameter and Picard condition'
-;!P.MULTI=[0,1,2]
-;plot_oo, mu, abs(discr), xrange=[minx,maxx],psym=1,Title='Tikhonov regularization',$
-;ytitle='Descripancy',xtitle='Regularization parameter, !4k!3'
-;plot,findgen(Nreg)+1.,C, xrange=[1,Ndata],xstyle=1,/xlog,Psym=10,$
-;Title='Picard Condition',xtitle='Singular Value number',/ylog
-;oplot,findgen(Nreg)+1.,data_u,line=1
-;oplot,findgen(Nreg)+1.,SV,line=2
-;!P.MULTI=0
-;****************************************************************************************
+  ;****************************************************************************************
+  ;window,4,xsize=600,ysize=600,title='Regularization parameter and Picard condition'
+  ;!P.MULTI=[0,1,2]
+  ;plot_oo, mu, abs(discr), xrange=[minx,maxx],psym=1,Title='Tikhonov regularization',$
+  ;ytitle='Descripancy',xtitle='Regularization parameter, !4k!3'
+  ;plot,findgen(Nreg)+1.,C, xrange=[1,Ndata],xstyle=1,/xlog,Psym=10,$
+  ;Title='Picard Condition',xtitle='Singular Value number',/ylog
+  ;oplot,findgen(Nreg)+1.,data_u,line=1
+  ;oplot,findgen(Nreg)+1.,SV,line=2
+  ;!P.MULTI=0
+  ;****************************************************************************************
 
-print, 'Regularization parameter (discrepancy): ', opt
-;****************************************************************************************
+  print, 'Regularization parameter (discrepancy): ', opt
+  ;****************************************************************************************
 
 
 end

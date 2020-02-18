@@ -29,7 +29,7 @@
 ;   U,W    			- matrixes consisting of decomposition products
 ;
 ;   opt    			- scalar, regularisation parameter
-;   dem_gues 		- vector, guess DEM 
+;   dem_gues 		- vector, guess DEM
 ;   Guess  		- scalar (0 or 1.), use or not to use guess DEM in the constraint
 ;   Npass  		- scalar, number of Monte Carlo simulations to produce confidence interval
 ;
@@ -63,28 +63,28 @@
 
 pro dem_inv_confidence_interval,reg_sol,data,edata,Alpha,Betta,U,W,opt,dem_guess,Guess,Npass,reg_sol_err
 
-seed = 1001L
-; Initial seed for a repeatable sequence
+  seed = 1001L
+  ; Initial seed for a repeatable sequence
 
-Strip_array=fltarr(Npass,n_elements(reg_sol))
+  Strip_array=fltarr(Npass,n_elements(reg_sol))
 
-for i=0, Npass-1 do begin
-	rand_arr=(randomu(seed,n_elements(reg_sol))-0.5D0)*2.*edata
-	dataX=data+rand_arr
-	dem_inv_reg_solution,Alpha,Betta,U,W,dataX,opt,dem_guess*Guess,Reg_solX
-	Strip_array[i,*]=reg_solX
-end
+  for i=0, Npass-1 do begin
+    rand_arr=(randomu(seed,n_elements(reg_sol))-0.5D0)*2.*edata
+    dataX=data+rand_arr
+    dem_inv_reg_solution,Alpha,Betta,U,W,dataX,opt,dem_guess*Guess,Reg_solX
+    Strip_array[i,*]=reg_solX
+  end
 
-reg_sol_err_plus=fltarr(n_elements(reg_sol))
-reg_sol_err_minus=fltarr(n_elements(reg_sol))
-for j=0, n_elements(reg_sol)-1 do begin
-	reg_sol_err_plus[j]=max((strip_array[*,j]-reg_sol[j]))
-	reg_sol_err_minus[j]=max(-(strip_array[*,j]-reg_sol[j]))
-end
+  reg_sol_err_plus=fltarr(n_elements(reg_sol))
+  reg_sol_err_minus=fltarr(n_elements(reg_sol))
+  for j=0, n_elements(reg_sol)-1 do begin
+    reg_sol_err_plus[j]=max((strip_array[*,j]-reg_sol[j]))
+    reg_sol_err_minus[j]=max(-(strip_array[*,j]-reg_sol[j]))
+  end
 
-reg_sol_err=fltarr(n_elements(reg_sol))
-for j=0, n_elements(reg_sol)-1 do reg_sol_err[j]=max(abs(strip_array[*,j]-reg_sol[j]))
+  reg_sol_err=fltarr(n_elements(reg_sol))
+  for j=0, n_elements(reg_sol)-1 do reg_sol_err[j]=max(abs(strip_array[*,j]-reg_sol[j]))
 
-;*****************************************************************************
+  ;*****************************************************************************
 
 end

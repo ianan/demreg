@@ -52,75 +52,75 @@
 
 
 pro dem_inv_reg_parameter_pos,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt,reg,opt_pos,reg_pos
-;calculates regularisation parameter
+  ;calculates regularisation parameter
 
- Nmu=1000.
+  Nmu=1000.
 
- Ndata=n_elements(Data)
- Nreg =n_elements(SigmaA)
+  Ndata=n_elements(Data)
+  Nreg =n_elements(SigmaA)
 
- arg=dblarr(Nreg,Nmu)
- ;arg2=dblarr(Nreg,Nmu)
- discr=dblarr(Nmu)
- 
- xi=dblarr(nreg,nmu)
- xi_np=dblarr(nmu)
+  arg=dblarr(Nreg,Nmu)
+  ;arg2=dblarr(Nreg,Nmu)
+  discr=dblarr(Nmu)
 
- maxx=max(SigmaA/SigmaB)*1d3
- minx=max(SigmaA/SigmaB)*1d-15
+  xi=dblarr(nreg,nmu)
+  xi_np=dblarr(nmu)
 
- step=(alog(maxx)-alog(minx))/(Nmu-1.)
- mu=exp(findgen(Nmu)*step)*minx
+  maxx=max(SigmaA/SigmaB)*1d3
+  minx=max(SigmaA/SigmaB)*1d-15
 
- omega=invert(w)##dem_guess
+  step=(alog(maxx)-alog(minx))/(Nmu-1.)
+  mu=exp(findgen(Nmu)*step)*minx
 
- for k=0,Ndata-1 do begin
-	coef=data##u[k,*]-SigmaA[k]*omega[k]
-	for i=0,Nmu-1 do begin
-		arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/(SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2
-	end
- end
- 
-for i=0, nmu-1 do begin
-	dem_inv_reg_solution,sigmaA,sigmaB,U,W,data,mu[i],transpose(dem_guess),regout
-	xi[*,i]=regout
-	ii=where(regout lt 0.,nii)
-	xi_np[i]=nii/(nreg*1.0)
-endfor
+  omega=invert(w)##dem_guess
 
-discr=total(arg,1)-total(err*err)*reg_tweak
+  for k=0,Ndata-1 do begin
+    coef=data##u[k,*]-SigmaA[k]*omega[k]
+    for i=0,Nmu-1 do begin
+      arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/(SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2
+    end
+  end
 
-pos=where(xi_np eq 0, npos)
-reg_pos=dblarr(nreg)
-if (npos gt 0) then begin
-	minimum=min(abs(discr[pos]),Min_index)
-	opt_pos=mu[pos[Min_index]]
-	reg_pos=xi[*,pos[min_index]]
-endif 
-	minimum=min(abs(discr),Min_index)
-	 opt=mu[Min_index]
-	 reg=xi[*,min_index]
+  for i=0, nmu-1 do begin
+    dem_inv_reg_solution,sigmaA,sigmaB,U,W,data,mu[i],transpose(dem_guess),regout
+    xi[*,i]=regout
+    ii=where(regout lt 0.,nii)
+    xi_np[i]=nii/(nreg*1.0)
+  endfor
 
-; SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
-; Data_U=abs(data##u)
-; C=data_u*SV
+  discr=total(arg,1)-total(err*err)*reg_tweak
 
-ar=fltarr(n_elements(data),n_elements(SigmaA))
-arf=fltarr(n_elements(data),n_elements(SigmaA))
-fact=(sigmaA/(sigmaA*sigmaA+opt*sigmaB*sigmaB))[0:5]
-fact_pos=(sigmaA/(sigmaA*sigmaA+opt_pos*sigmaB*sigmaB))[0:5]
+  pos=where(xi_np eq 0, npos)
+  reg_pos=dblarr(nreg)
+  if (npos gt 0) then begin
+    minimum=min(abs(discr[pos]),Min_index)
+    opt_pos=mu[pos[Min_index]]
+    reg_pos=xi[*,pos[min_index]]
+  endif
+  minimum=min(abs(discr),Min_index)
+  opt=mu[Min_index]
+  reg=xi[*,min_index]
 
-for k=0,n_elements(data)-1 do begin
-	scal =data##u[k,*]
-		for j=0,n_elements(SigmaA)-1 do begin
-		      ar[k,j]=scal*w[k,j]
-		      arf[k,j]=(sigmaA[k]*scal*w[k,j])/(sigmaA[k]*sigmaA[k]+opt*sigmaB[k]*sigmaB[k])
-	end
-end
+  ; SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
+  ; Data_U=abs(data##u)
+  ; C=data_u*SV
+
+  ar=fltarr(n_elements(data),n_elements(SigmaA))
+  arf=fltarr(n_elements(data),n_elements(SigmaA))
+  fact=(sigmaA/(sigmaA*sigmaA+opt*sigmaB*sigmaB))[0:5]
+  fact_pos=(sigmaA/(sigmaA*sigmaA+opt_pos*sigmaB*sigmaB))[0:5]
+
+  for k=0,n_elements(data)-1 do begin
+    scal =data##u[k,*]
+    for j=0,n_elements(SigmaA)-1 do begin
+      ar[k,j]=scal*w[k,j]
+      arf[k,j]=(sigmaA[k]*scal*w[k,j])/(sigmaA[k]*sigmaA[k]+opt*sigmaB[k]*sigmaB[k])
+    end
+  end
 
 
-print, 'Regularization parameter (discrepancy): ', opt
-;****************************************************************************************
+  print, 'Regularization parameter (discrepancy): ', opt
+  ;****************************************************************************************
 
 
 end
