@@ -44,6 +44,7 @@
 ; MODifICATION HISTORY:
 ;   eduard(at)astro.gla.ac.uk, 23 May, 2005
 ;  21-Jul-2011	Program and Variable names changed    IGH
+;  28-Apr-2020  Changed any fltarr() to dblarr()  IGH
 ;
 
 pro dem_inv_make_constraint,L,logT,dlogT,dem_guess,order
@@ -51,18 +52,18 @@ pro dem_inv_make_constraint,L,logT,dlogT,dem_guess,order
   M=n_elements(dlogT)
 
   ; second order, constraint is the second derivative
-  D2=fltarr(M,M)
+  D2=dblarr(M,M)
   for i=0, M-1 do D2(i,i)  =-2.*sqrt(dlogT[i])/sqrt(abs(dem_guess[i])/logT[i]^2)
   for i=0, M-2 do D2(i,i+1)= 1.*sqrt(dlogT[i])/sqrt(abs(dem_guess[i])/logT[i]^2)
   for i=1, M-1 do D2(i,i-1)= 1.*sqrt(dlogT[i])/sqrt(abs(dem_guess[i])/logT[i]^2)
 
   ; first order, constraint is the first derivative
-  D1=fltarr(M,M)
+  D1=dblarr(M,M)
   for i=0, M-2 do D1(i,i+1)=sqrt(dlogT[i])/sqrt(abs(dem_guess[i])/logT[i])
   for i=0, M-1 do D1(i,i)  =-sqrt(dlogT[i])/sqrt(abs(dem_guess[i])/logT[i])
 
   ; zeroth order, constraint is the identity matrix
-  D0=fltarr(M,M)
+  D0=dblarr(M,M)
   For i=0, M-1 do D0(i,i)=sqrt(dlogT[i])/sqrt(abs(dem_guess[i]))
 
 

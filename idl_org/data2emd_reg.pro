@@ -69,6 +69,7 @@ FUNCTION data2emd_reg, logT ,TRmatrix ,data ,edata ,$
   ;
   ; MODIFICATION HISTORY:
   ; 18-Feb-2020   EMD version of data2dem_reg.pro - so returns cm^-5 instead of cm^-5 K^-1
+  ; 28-Apr-2020   Changed any fltarr() to dblarr() 
   ;
   ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,7 +98,7 @@ FUNCTION data2emd_reg, logT ,TRmatrix ,data ,edata ,$
   sclfc=1d20
   RMatrix=TRmatint*sclfc
   RMatrix_org=Rmatrix
-  EMD_model =fltarr(nt)
+  EMD_model =dblarr(nt)
 
   ; normalize everything by the errors
   data_in=data/edata
@@ -121,7 +122,7 @@ FUNCTION data2emd_reg, logT ,TRmatrix ,data ,edata ,$
     ; Regularization is run twice
     ; the first time the constraint matrix is taken as the identity matrix normalized by dlogT
     ; must use this 0th order as no EMD_model guess
-    L=fltarr(nT,nT)
+    L=dblarr(nT,nT)
     for i=0, nT-1 do L[i,i]=1.0/sqrt(dlogTint[i])
 
     ; GSVD on temperature responses (Rmatrix) and constraint matrix (L)
@@ -175,9 +176,9 @@ FUNCTION data2emd_reg, logT ,TRmatrix ,data ,edata ,$
     residuals_pos=(data-data_reg_pos)/edata
     chisq_pos=total(residuals_pos^2)/(nf*1.0)
 
-    data_cont_t=fltarr(nt,nf)
+    data_cont_t=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*EMD_reg
-    data_cont_t_pos=fltarr(nt,nf)
+    data_cont_t_pos=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t_pos[*,i]=Rmatrix_org[*,i]*EMD_reg_pos
 
 
@@ -215,7 +216,7 @@ FUNCTION data2emd_reg, logT ,TRmatrix ,data ,edata ,$
     residuals=(data-data_reg)/edata
     chisq=total(residuals^2)/(nf*1.0)
 
-    data_cont_t=fltarr(nt,nf)
+    data_cont_t=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*EMD_reg
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$

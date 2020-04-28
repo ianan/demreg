@@ -85,6 +85,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   ; 13-Sep-2013 removed nt in demtoem factor and emloci scaling
   ; 11-Oct-2016 removed get_edges() call and calculated logT bin-mids directly
   ; 20-Dec-2017 minor bug fix for missing data_cont_t_pos definition
+  ; 28-Apr-2020  Changed any fltarr() to dblarr()
   ;
   ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -112,7 +113,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   dlogTint=[dlogTint,dlogTint[nt-2]]
 
   ;Before we begin can work out the conversion factors for DEM to EM
-  lgt_edg=fltarr(nt-1)
+  lgt_edg=dblarr(nt-1)
   for ll=0,nt-2 do lgt_edg[ll]=(logTint[ll+1]+logTint[ll])*0.5
   lgt_edg=[lgt_edg[0]-(lgt_edg[1]-lgt_edg[0]),lgt_edg,lgt_edg[nt-2]+(lgt_edg[nt-2]-lgt_edg[nt-3])]
   dlgT_edg=lgt_edg[1:nt]-lgt_edg[0:nt-1]
@@ -123,7 +124,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
   for i=0, nF-1  do RMatrix[*,i]=TRmatint[*,i]*10d^logTint*alog(10d^dlogTint)
   RMatrix=RMatrix*1d20
   RMatrix_org=Rmatrix
-  DEM_model =fltarr(nt)
+  DEM_model =dblarr(nt)
 
   ; normalize everything by the errors
   data_in=data/edata
@@ -147,7 +148,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
     ; Regularization is run twice
     ; the first time the constraint matrix is taken as the identity matrix normalized by dlogT
     ; must use this 0th order as no dem_model guess
-    L=fltarr(nT,nT)
+    L=dblarr(nT,nT)
     for i=0, nT-1 do L[i,i]=1.0/sqrt(dlogTint[i])
 
     ; GSVD on temperature responses (Rmatrix) and constraint matrix (L)
@@ -201,9 +202,9 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
     residuals_pos=(data-data_reg_pos)/edata
     chisq_pos=total(residuals_pos^2)/(nf*1.0)
 
-    data_cont_t=fltarr(nt,nf)
+    data_cont_t=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*dem_reg
-    data_cont_t_pos=fltarr(nt,nf)
+    data_cont_t_pos=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t_pos[*,i]=Rmatrix_org[*,i]*dem_reg_pos
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$
@@ -240,7 +241,7 @@ FUNCTION data2dem_reg, logT ,TRmatrix ,data ,edata ,$
     residuals=(data-data_reg)/edata
     chisq=total(residuals^2)/(nf*1.0)
 
-    data_cont_t=fltarr(nt,nf)
+    data_cont_t=dblarr(nt,nf)
     for i=0, nf-1 do data_cont_t[*,i]=Rmatrix_org[*,i]*dem_reg
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$

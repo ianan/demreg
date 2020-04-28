@@ -49,13 +49,13 @@
 ; MODIFICATION HISTORY:
 ;   eduard(at)astro.gla.ac.uk, 16 Sept, 2005
 ;  21-Jul-2011	Program and Variable names changed    IGH
-;
+;  28-Apr-2020  Changed any fltarr() to dblarr()      IGH
 
 
 pro dem_inv_reg_solution,sigmaA,SigmaB,U,W,data,opt,dem_guess,reg_sol
   ;regularised solution
 
-  ar=fltarr(n_elements(data),n_elements(sigmaA))
+  ar=dblarr(n_elements(data),n_elements(sigmaA))
 
   omega=invert(w)##dem_guess
 

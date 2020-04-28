@@ -49,6 +49,7 @@
 ;  21-Jul-2011	Program and Variable names changed    IGH
 ;  21-Jul-2011	Commented out plotting of picard condition IGH
 ;  26-Sep-2011	This modified version produces an extra positive solution IGH
+;  28-Apr-2020  Changed any fltarr() to dblarr() IGH
 
 
 pro dem_inv_reg_parameter_pos,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt,reg,opt_pos,reg_pos
@@ -105,8 +106,8 @@ pro dem_inv_reg_parameter_pos,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt
   ; Data_U=abs(data##u)
   ; C=data_u*SV
 
-  ar=fltarr(n_elements(data),n_elements(SigmaA))
-  arf=fltarr(n_elements(data),n_elements(SigmaA))
+  ar=dblarr(n_elements(data),n_elements(SigmaA))
+  arf=dblarr(n_elements(data),n_elements(SigmaA))
   fact=(sigmaA/(sigmaA*sigmaA+opt*sigmaB*sigmaB))[0:5]
   fact_pos=(sigmaA/(sigmaA*sigmaA+opt_pos*sigmaB*sigmaB))[0:5]
 

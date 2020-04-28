@@ -38,20 +38,21 @@
 ;   eduard(at)astro.gla.ac.uk, 16 Sept, 2005
 ;  21-Jul-2011	Program and Variable names changed    IGH
 ;  21-Jul-2011	Rewritten to work in more transparent way IGH
-; 17-Aug-2011 Added FWHM2 as double max distance from diagional to half max
+;  17-Aug-2011  Added FWHM2 as double max distance from diagional to half max
+;  28-Apr-2020  Changed any fltarr() to dblarr()
 
 pro dem_inv_reg_resolution,Alpha,Betta,opt,w,logT,dT,fwhm, cent,RK,fwhm2
 
   M=n_elements(Alpha)
 
-  Filter=fltarr(M,M)
+  Filter=dblarr(M,M)
   For i=0, M-1 do Filter[i,i]=alpha[i]^2/(alpha[i]^2+opt*betta[i]^2)
 
   RK =w##(Filter##invert(w))
 
-  FWHM=fltarr(M)
-  FWHM2=fltarr(M)
-  cent=fltarr(M)
+  FWHM=dblarr(M)
+  FWHM2=dblarr(M)
+  cent=dblarr(M)
 
   ltt=min(logt)+(max(logt)-min(logt))*findgen(1001)/(1001-1.0)
 

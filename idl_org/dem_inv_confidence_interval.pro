@@ -58,6 +58,7 @@
 ; MODIFICATION HISTORY:
 ;   eduard(at)astro.gla.ac.uk, 30 September, 2005
 ;  21-Jul-2011	Program and Variable names changed    IGH
+;  28-Apr-2020  Changed any fltarr() to dblarr()    IGH
 ;-
 
 
@@ -66,7 +67,7 @@ pro dem_inv_confidence_interval,reg_sol,data,edata,Alpha,Betta,U,W,opt,dem_guess
   seed = 1001L
   ; Initial seed for a repeatable sequence
 
-  Strip_array=fltarr(Npass,n_elements(reg_sol))
+  Strip_array=dblarr(Npass,n_elements(reg_sol))
 
   for i=0, Npass-1 do begin
     rand_arr=(randomu(seed,n_elements(reg_sol))-0.5D0)*2.*edata
@@ -75,14 +76,14 @@ pro dem_inv_confidence_interval,reg_sol,data,edata,Alpha,Betta,U,W,opt,dem_guess
     Strip_array[i,*]=reg_solX
   end
 
-  reg_sol_err_plus=fltarr(n_elements(reg_sol))
-  reg_sol_err_minus=fltarr(n_elements(reg_sol))
+  reg_sol_err_plus=dblarr(n_elements(reg_sol))
+  reg_sol_err_minus=dblarr(n_elements(reg_sol))
   for j=0, n_elements(reg_sol)-1 do begin
     reg_sol_err_plus[j]=max((strip_array[*,j]-reg_sol[j]))
     reg_sol_err_minus[j]=max(-(strip_array[*,j]-reg_sol[j]))
   end
 
-  reg_sol_err=fltarr(n_elements(reg_sol))
+  reg_sol_err=dblarr(n_elements(reg_sol))
   for j=0, n_elements(reg_sol)-1 do reg_sol_err[j]=max(abs(strip_array[*,j]-reg_sol[j]))
 
   ;*****************************************************************************
