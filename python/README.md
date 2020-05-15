@@ -3,11 +3,11 @@ This is a test version of demreg in python - not currently recommended for publi
 
 Main development is by Alasdair Wilson and up-to-date version is available at [https://github.com/alasdairwilson/demreg-py](https://github.com/alasdairwilson/demreg-py).
 
-This is a python version of the "mapping" demreg code which you can find in this repo in ../idl/ 
+This is a python version of the "mapping" demreg code which you can find in this repo in [../idl/](../idl/). 
 
 ## Longer term things
 
-If you use this code (once its recommended for public use) please reference back to the original [Hannah & Kontar A&A 539 A146 (2012)](https://doi.org/10.1051/0004-6361/201117576).
+If you use this code (once it is recommended for public use) please reference back to the original [Hannah & Kontar A&A 539 A146 (2012)](https://doi.org/10.1051/0004-6361/201117576).
 
 ##### Potted history
 
