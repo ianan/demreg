@@ -100,7 +100,7 @@ pro example_dem_aia15
   mdem0=make_map(dem[*,*,0]*0,dx=mm[0].dx,dy=mm[0].dy,xc=mm[0].xc,yc=mm[0].yc,time=anytim(mm[0].time,/yoh,/trunc))
   mdem=replicate(mdem0,nt)
   for i=0,nt-1 do begin
-    mdem[i].data=dem[*,*,0]
+    mdem[i].data=dem[*,*,i]
     ;    mdem[i].id=string(logtemps[i],format='(f4.2)')+' to '+string(logtemps[i+1],format='(f4.2)')+' Log!D10!N MK'
     mdem[i].id=string(temps[i]*1d-6,format='(f4.1)')+' to '+string(temps[i+1]*1d-6,format='(f4.1)')+' MK'
   endfor
