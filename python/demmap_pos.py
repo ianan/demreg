@@ -1,11 +1,13 @@
 import numpy as np
+from numpy import diag
 import scipy
 import concurrent.futures
 from dem_inv_gsvd import dem_inv_gsvd
 from dem_reg_map import dem_reg_map
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0):
+import pdb
+def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None):
     """
     demmap_pos
     computes the dems for a 1 d array of length na with nf filters using the dn (g) counts and the temperature
@@ -83,6 +85,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg
         the simulated dn for each filter for the recovered DEM    
     """
+ 
     na=dd.shape[0]
     nf=rmatrix.shape[1]
     nt=logt.shape[0]
@@ -97,7 +100,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     kdagk=np.zeros([nt,nt])
     dn_reg=np.zeros([na,nf])
     ednin=np.zeros([nf])
-
+ 
     #do we have enough dem's to make parallel make sense?
     if (na>=256):
         n_par = 64
@@ -118,11 +121,13 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
             for f in tqdm(as_completed(futures), **kwargs):
                 pass
         for i,f in enumerate(futures):
+        #store the outputs in arrays
             dem[i*n_par:(i+1)*n_par,:]=f.result()[0]
             edem[i*n_par:(i+1)*n_par,:]=f.result()[1]
             elogt[i*n_par:(i+1)*n_par,:]=f.result()[2]
             chisq[i*n_par:(i+1)*n_par]=f.result()[3]
             dn_reg[i*n_par:(i+1)*n_par,:]=f.result()[4]
+        #if there are any remaining dems then execute remainder in serial
         if (np.mod(na,niter*n_par) != 0):
             i_start=niter*n_par
             for i in range(na-i_start):
@@ -184,9 +189,9 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
         rmatrixin[:,kk]=rmatrix[:,kk]/ednin[kk]
     dn=dnin/ednin
     edn=ednin/ednin
-
     # checking for Inf and NaN
     if ( sum(np.isnan(dn)) == 0 and sum(np.isinf(dn)) == 0 ):
+#         print('test',sum(np.isnan(dn)),sum(np.isinf(dn)))
         ndem=1
         piter=0
         rgt=reg_tweak
@@ -201,6 +206,7 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
 #  Though need to check what you have supplied is correct dimension 
 #  and no element 0 or less.
         if( len(dem_reg_wght) == nt):
+            
             if (np.prod(dem_reg_wght) > 0):
                 test_dem_reg=np.ones(1).astype(int)
         # use the min of the emloci as the initial dem_reg
@@ -219,18 +225,18 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             else:
                 # Calculate the initial constraint matrix
                 # Just a diagional matrix scaled by dlogT
-                L=diag(1.0/sqrt(dlogt[:]))
+                L=diag(1.0/np.sqrt(dlogt[:]))
                 #run gsvd
                 sva,svb,U,V,W=dem_inv_gsvd(rmatrixin.T,L)
                 #run reg map
-                lamb=dem_reg_map(sva,svb,U,W,DN,eDN,rgt,nmu)
+                lamb=dem_reg_map(sva,svb,U,W,dn,edn,rgt,nmu)
                 #filt, diagonal matrix
                 filt=diag(sva/(sva**2+svb**2*lamb))
 
                 kdag=W@(U[:nf,:nf].T@filt)
                 dr0=(kdag@dn).squeeze()
                 # only take the positive with certain amount (fcofmx) of max, then make rest small positive
-                fcofmx=1e-4
+                fcofmax=1e-4
                 mask=np.where(dr0 > 0) and (dr0 > fcofmax*np.max(dr0)) 
                 dem_reg[mask]=dr0[mask]
                 dem_reg[~mask]=1
@@ -247,7 +253,6 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             lamb=dem_reg_map(sva,svb,U,W,dn,edn,rgt,nmu)
             for kk in np.arange(nf):
                 filt[kk,kk]=(sva[kk]/(sva[kk]**2+svb[kk]**2*lamb))
-
             kdag=W@(filt.T@U[:nf,:nf])
     
             dem_reg_out=(kdag@dn).squeeze()
@@ -256,7 +261,7 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             rgt=rgt_fact*rgt
             piter+=1
 
-        #put the fresh dem into the array of dem
+        
         dem=dem_reg_out
 
         #work out the theoretical dn and compare to the input dn
@@ -272,14 +277,11 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
 
         kdagk=kdag@rmatrixin.T
 
-        #errors
+        elogt=np.zeros(nt)
         for kk in np.arange(nt):
-            # f=scipy.interpolate.interp1d(logt,kdagk.T[kk,:],kind='linear')
-            # rr=f(ltt)
-            rr=np.interp(ltt,logt,kdagk.T[kk,:])
-            hm_mask=(rr >= max(kdagk[kk,:])/2.)
-            elogt=dlogt[kk]
+            rr=np.interp(ltt,logt,kdagk[:,kk])               
+            hm_mask=(rr >= max(kdagk[:,kk])/2.)
+            elogt[kk]=dlogt[kk]
             if (np.sum(hm_mask) > 0):
-                elogt=ltt[hm_mask][-1]-ltt[hm_mask][0]
-
+                elogt[kk]=(ltt[hm_mask][-1]-ltt[hm_mask][0])/2
     return dem,edem,elogt,chisq,dn_reg

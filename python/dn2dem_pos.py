@@ -7,7 +7,7 @@ from demmap_pos import demmap_pos
 imperial.enable()
 
 
-def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,rgt_fact=1.5,dem_norm0=0):
+def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,rgt_fact=1.5,dem_norm0=None):
     # Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
     # using the method of Hannah & Kontar A&A 553 2013
     # Basically getting DEM(T) out of g(f)=K(f,T)#DEM(T)
@@ -20,9 +20,16 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     nt=len(dlogt)
     logt=(np.array([np.log10(temps[0])+(dlogt[i]*(float(i)+0.5)) for i in np.arange(nt)]))
     #number of DEM entries
-
+    
     #hopefully we can deal with a variety of data, nx,ny,nf
     sze=dn_in.shape
+    
+    # deal with no dem_norm provided => just array of 1s
+    if (np.any(dem_norm0)==None):
+        if (len(sze)==1):
+            dem_norm0=np.ones(nt)
+        else:
+            dem_norm0=np.ones(np.hstack((sze[0:-1],nt)))
     #for a single pixel
     if len(sze)==1:
         nx=1
@@ -32,7 +39,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         dn[0,0,:]=dn_in
         edn=np.zeros([1,1,nf])
         edn[0,0,:]=edn_in
-        if ((dem_norm0.ndim) > 0):
+        if (np.all(dem_norm0) != None):
             dem0=np.zeros([1,1,nt])
             dem0[0,0,:]=dem_norm0
     #for a row of pixels
@@ -44,7 +51,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         dn[:,0,:]=dn_in
         edn=np.zeros([nx,1,nf])
         edn[:,0,:]=edn_in
-        if ((dem_norm0.ndim) > 0):
+        if (np.all(dem_norm0) != None):
             dem0=np.zeros([nx,1,nt])
             dem0[:,0,:]=dem_norm0
     #for 2d image
@@ -56,7 +63,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         dn[:,:,:]=dn_in
         edn=np.zeros([nx,ny,nf])
         edn[:,:,:]=edn_in
-        if ((dem_norm0.ndim) > 0):
+        if (np.all(dem_norm0) != None):
             dem0=np.zeros([nx,ny,nt])
             dem0[:,:,:]=dem_norm0
 
@@ -78,19 +85,10 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     tr=np.zeros([nt,nf])
     for i in np.arange(nf):
-        # f=scipy.interpolate.interp1d(tresp_logt,truse[:,i])
-        # tr[:,i]=f(logt)
         tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
-    # fig = plt.figure()
-    # ax = fig.gca()
-    # for i in np.arange(nf):
-    #     plt.plot(logt,np.log10(tr[:,i]))
-    # plt.legend(wavenum)
-    # plt.show()   
 
     rmatrix=np.zeros([nt,nf])
     #Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
-
     for i in np.arange(nf):
         rmatrix[:,i]=tr[:,i]*10.0**logt*np.log(10.0**dlogt)
     #Just scale so not dealing with tiny numbers
@@ -118,10 +116,10 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         dem01d=np.reshape(dem0,[nx*ny,nt])
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
                 rgt_fact=rgt_fact,dem_norm0=dem01d)
-    # else:
-    #     demmap_pos(dn1d,edn1d,RMatrix,logt,dlogt,glc,dem1d,chisq1d,\
-    #         edem1d,elogt1d,dn_reg1d,reg_tweak=reg_tweak,max_iter=max_iter,\
-    #             rgt_fact=rgt_fact)
+    else:
+        dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,\
+            dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
+                rgt_fact=rgt_fact,dem_norm0=0)
     #reshape the 1d arrays to original dimensions and squeeze extra dimensions
     dem=((np.reshape(dem1d,[nx,ny,nt]))*sclf).squeeze()
     edem=((np.reshape(edem1d,[nx,ny,nt]))*sclf).squeeze()
