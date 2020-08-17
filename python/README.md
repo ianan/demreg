@@ -3,9 +3,9 @@
 This is a python version of the "mapping" DEMReg code which you can find in this repo in [../idl/](../idl/). 
 
 This repo contains main python code needed and some nice jupyter notebook examples:
-* [example_demregpy_aiasyn.ipynb]() Example notebook recovering the DEM from synthetic AIA data
-* [dn2dem_pos.py]() Wrapper to convert data (single set or map) for use with demmap_pos.pro
-* [demmap_pos.py]() Main DEMReg code (input is spatial 1D of data)
+* [example_demregpy_aiasyn.ipynb](https://github.com/ianan/demreg/blob/master/python/example_demregpy_aiasyn.ipynb) Example notebook recovering the DEM from synthetic AIA data
+* [dn2dem_pos.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos.py) Wrapper to convert data (single set or map) for use with demmap_pos.pro
+* [demmap_pos.py](https://github.com/ianan/demreg/blob/master/python/demmap_pos.py) Main DEMReg code (input is spatial 1D of data)
 
 Main development is by Alasdair Wilson and up-to-date version is available at [https://github.com/alasdairwilson/demreg-py](https://github.com/alasdairwilson/demreg-py), with examples for working with actual AIA data.
 
