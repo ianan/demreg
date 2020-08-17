@@ -8,10 +8,13 @@
 ;; 08-11-2016    Removed ssw dependent routines - should run with standard IDL
 ;; 20-05-2019    Minor update: must use the timedepend_date option when getting aia response
 ;; 28-04-2020    Minor tweak to aia_get_response() - added /eve to avoid prompt
+;; 12-08-2020    Leave degradation correction out of the responses - assume data is corrected (i.e. from t0)
 
 ; Need to make the response functions?
 if (file_test('aia_resp.dat') eq 0) then $
-  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
+;  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
+  tresp=aia_get_response(/temperature,/dn,/eve) & save,file='aia_resp.dat',tresp
+
 restore,file='aia_resp.dat'
 
 ; ; order of filters to use

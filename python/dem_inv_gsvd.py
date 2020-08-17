@@ -3,6 +3,8 @@ from numpy.linalg import inv,pinv,svd
 import scipy
 import pprint
 import pprint
+import threadpoolctl
+
 def dem_inv_gsvd(A,B):
     """
     dem_inv_gsvd

@@ -8,11 +8,66 @@ imperial.enable()
 
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,rgt_fact=1.5,dem_norm0=None):
-    # Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
-    # using the method of Hannah & Kontar A&A 553 2013
-    # Basically getting DEM(T) out of g(f)=K(f,T)#DEM(T)
+    """
+    Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
+    using the method of Hannah & Kontar A&A 553 2013
+    Basically getting DEM(T) out of g(f)=K(f,T)#DEM(T)
 
+    --------------------
+    Inputs:
+    --------------------
 
+    dn_in:
+        The dn counts in dn/px/s for each filter is shape nx*ny*nf (nf=number of filters nx,ny = spatial dimensions, 
+        one or both of which can be size 0 for 0d/1d problems. (or nt,nf or nx,nt,nf etc etc to get time series)
+    edn_in:
+        The error on the dn values in the same units and same dimensions.
+    tresp:
+        the temperature response matrix size n_tresp by nf
+    tresp_logt:
+        the temperatures in log t which the temperature response matrix corresponds to. E.G if your tresp matrix 
+        runs from 5.0 to 8.0 in steps of 0.05 then this is the input to tresp_logt
+    temps:
+        the temperatures at which to calculate a DEM, array of length nt.
+
+    --------------------
+    Optional Inputs:
+    --------------------
+
+    dem_norm0:
+        Highly recommended optional input!! This is an array of length nt which contains an initial guess of the DEM 
+        solution providing a weighting for the inversion process. The actual values of the normalisation do not matter,
+        only their relative values. Without dem_norm0 set the initial guess is taken as an arrays of 1 (i.e. all temperatures
+        weighted equally)
+    reg_tweak:
+        the initial normalised chisq target.
+    max_iter:
+        the maximum number of iterations to attempt, code iterates if negative DEM os reached. If max iter is reached before
+        a suitable solution is found then the current solution is returned instead (which may contain negative values)
+    gloci:
+        array of maximum length nf containing the indexes of the filters of which to use a loci curve as the dem_normalisation.
+        can be used in place of dem_norm0
+    rgt_fact:
+        the factor by which rgt_tweak increases each iteration. As the target chisq increases there is more flexibility allowed 
+        on the DEM
+
+    --------------------
+    Outputs:
+    --------------------
+
+    dem:
+        The DEM, has shape nx*ny*nt and units cm^-5 K^-1
+    edem:
+        vertical errors on the DEM, same units.
+    elogt:
+        Horizontal errors on temperature.
+    chisq:
+        The final chisq, shape nx*ny. Pixels which have undergone more iterations will in general have higher chisq.
+    dn_reg:
+        The simulated dn counts, shape nx*ny*nf. This is obtained by multiplying the DEM(T) by the filter response K(f,T) for each channel
+        useful for comparing with the initial data.
+ 
+    """
     #create our bin averages:
     logt=([np.mean([(np.log10(temps[i])),np.log10((temps[i+1]))]) for i in np.arange(0,len(temps)-1)])
     #and widths
