@@ -4,7 +4,9 @@ This is a python version of the "mapping" DEMReg code which you can find in this
 
 This repo contains main python code needed and some nice jupyter notebook examples:
 * [example_demregpy_aiasyn.ipynb](https://github.com/ianan/demreg/blob/master/python/example_demregpy_aiasyn.ipynb) Example notebook recovering the DEM from synthetic AIA data
-* [dn2dem_pos.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos.py) Wrapper to convert data (single set or map) for use with demmap_pos.py
+* [example_demregpy_aiapxl.ipynb](https://github.com/ianan/demreg/blob/master/python/example_demregpy_aiapxl.ipynb) Example notebook recovering the DEM from real AIA data, including how to prep it via aiapy
+* [dn2dem_pos_selfnorm.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos_selfnorm.py) Wrapper to use data (single set or map) with demmap_pos.py, running regularisation twice, the second time weighting/normalising using the first run solution.
+* [dn2dem_pos.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos.py) Wrapper to use data (single set or map) with demmap_pos.py
 * [demmap_pos.py](https://github.com/ianan/demreg/blob/master/python/demmap_pos.py) Main DEMReg code (input is spatial 1D of data)
 
 Main development is by Alasdair Wilson and up-to-date version is available at [https://github.com/alasdairwilson/demreg-py](https://github.com/alasdairwilson/demreg-py), with examples for working with actual AIA data.
