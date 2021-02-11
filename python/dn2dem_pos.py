@@ -132,7 +132,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         #keep good TR data
         truse[tresp[:,i] > 0]=tresp[tresp[:,i] > 0]
         #set bad data to the minimum
-        truse[tresp[:,i] <= 0]=np.min(tresp[tresp[:,i] > 0])
+        truse[tresp[:,i] <= 0,i]=np.min(tresp[tresp[:,i] > 0],axis=0)[i]
 
     tr=np.zeros([nt,nf])
     for i in np.arange(nf):
