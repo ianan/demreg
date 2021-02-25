@@ -104,7 +104,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     #do we have enough dem's to make parallel make sense?
     if (na>=256):
         n_par = 128
-        print('Executing in parallel using concurrent futures')
+#         print('Executing in parallel using concurrent futures')
         niter=(int(np.floor((na)/n_par)))
 
 
@@ -141,7 +141,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         
     #else we execute in serial
     else:   
-        print('Executing in serial')
+#         print('Executing in serial')
 
         for i in range(na):
             result=dem_pix(dd[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \

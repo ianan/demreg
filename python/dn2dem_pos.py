@@ -145,8 +145,8 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     #Just scale so not dealing with tiny numbers
     sclf=1E15
     rmatrix=rmatrix*sclf
-    #time it
-    t_start = time.Time.now()
+#     #time it
+#     t_start = time.Time.now()
 
 
     dn1d=np.reshape(dn,[nx*ny,nf])
@@ -178,6 +178,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     chisq=(np.reshape(chisq1d,[nx,ny])).squeeze()
     dn_reg=(np.reshape(dn_reg1d,[nx,ny,nf])).squeeze()
     #end the timing
-    t_end = time.Time.now()
-    print('total elapsed time =', time.Time(t_end-t_start,format='datetime'))
+#     t_end = time.Time.now()
+#     print('total elapsed time =', (t_end-t_start).to_value('datetime'))
+# #     print('total elapsed time =', time.Time(t_end-t_start,format='datetime'))
     return dem,edem,elogt,chisq,dn_reg

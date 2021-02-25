@@ -9,7 +9,7 @@ pro make_aiaresp_forpy
   ; before combining with these responses
   ;
   ; 17-Aug-2020 IGH
-  ;
+  ; 25-Feb-2021 IGH - Renamed output file as not necessarily v9
   ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ;  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010')
@@ -21,7 +21,7 @@ pro make_aiaresp_forpy
   tr=tresp.all[*,ids]
   units=tresp.units
 
-  save,file='aia_trespv9_en.dat',channels,logt,tr,units
+  save,file='aia_tresp_en.dat',channels,logt,tr,units
 
 
   stop
