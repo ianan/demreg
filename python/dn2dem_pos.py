@@ -2,7 +2,6 @@ import numpy as np
 import scipy.interpolate
 import astropy.units as u
 from astropy.units import imperial
-from astropy import time
 from demmap_pos import demmap_pos
 imperial.enable()
 
@@ -144,7 +143,10 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     tr=np.zeros([nt,nf])
     for i in np.arange(nf):
-        tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
+#         This really should be be interp in log-space
+        tr[:,i]=10**np.interp(logt,tresp_logt,np.log10(truse[:,i]))
+#     Previous version
+#         tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
 
     rmatrix=np.zeros([nt,nf])
     #Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
@@ -153,9 +155,6 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     #Just scale so not dealing with tiny numbers
     sclf=1E15
     rmatrix=rmatrix*sclf
-#     #time it
-#     t_start = time.Time.now()
-
 
     dn1d=np.reshape(dn,[nx*ny,nf])
     edn1d=np.reshape(edn,[nx*ny,nf])
@@ -186,8 +185,5 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     elogt=(np.reshape(elogt1d,[ny,nx,nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
     chisq=(np.reshape(chisq1d,[nx,ny])).squeeze()
     dn_reg=(np.reshape(dn_reg1d,[nx,ny,nf])).squeeze()
-    #end the timing
-#     t_end = time.Time.now()
-#     print('total elapsed time =', (t_end-t_start).to_value('datetime'))
-# #     print('total elapsed time =', time.Time(t_end-t_start,format='datetime'))
+
     return dem,edem,elogt,chisq,dn_reg
