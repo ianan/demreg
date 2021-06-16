@@ -81,6 +81,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     #for a single pixel
     if (np.any(dem_norm0)==None):
+#         If no dem0 wght given just set them all to 1
         dem_norm0=np.ones(np.hstack((dn_in.shape[0:-1],nt)).astype(int))
     if len(sze)==1:
         nx=1
@@ -117,11 +118,18 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         if (np.all(dem_norm0) != None):
             dem0=np.zeros([nx,ny,nt])
             dem0[:,:,:]=dem_norm0
-
-    glc=np.zeros(nf)
-    glc.astype(int)
-
-
+    
+    # Set glc to either none or all, based on gloci input (default none/not using)
+# IDL version of code allows selective use of gloci, i.e [1,1,0,0,1,1] to chose 4 of 6 filters for EM loci
+# dem_pix() in demmap_pos.py does allow this, but not sure will work through these wrapper functions
+# also not sure if this functionality is actually needed, just stick with all filter or none?
+    if gloci == 1:
+        glc=np.ones(nf)
+        glc.astype(int)
+    else:
+        glc=np.zeros(nf)
+        glc.astype(int)      
+        
     if len(tresp[0,:])!=nf:
         print('Tresp needs to be the same number of wavelengths/filters as the data.')
     
@@ -162,7 +170,8 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 # *****************************************************
 #  Actually doing the DEM calculations
 # *****************************************************
-# Do we have an initial DEM guess/constraint to send to demmap_pos as well?
+# Should always be just running the first part of if here as setting dem01d to array of 1s if nothing given
+# So now more a check dimensions of things are correct 
     if ( dem0.ndim==dn.ndim ):
         dem01d=np.reshape(dem0,[nx*ny,nt])
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
