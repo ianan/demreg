@@ -2,7 +2,6 @@ import numpy as np
 import scipy.interpolate
 import astropy.units as u
 from astropy.units import imperial
-from astropy import time
 from demmap_pos import demmap_pos
 imperial.enable()
 
@@ -81,6 +80,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     #for a single pixel
     if (np.any(dem_norm0)==None):
+#         If no dem0 wght given just set them all to 1
         dem_norm0=np.ones(np.hstack((dn_in.shape[0:-1],nt)).astype(int))
     if len(sze)==1:
         nx=1
@@ -117,11 +117,18 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         if (np.all(dem_norm0) != None):
             dem0=np.zeros([nx,ny,nt])
             dem0[:,:,:]=dem_norm0
-
-    glc=np.zeros(nf)
-    glc.astype(int)
-
-
+    
+    # Set glc to either none or all, based on gloci input (default none/not using)
+# IDL version of code allows selective use of gloci, i.e [1,1,0,0,1,1] to chose 4 of 6 filters for EM loci
+# dem_pix() in demmap_pos.py does allow this, but not sure will work through these wrapper functions
+# also not sure if this functionality is actually needed, just stick with all filter or none?
+    if gloci == 1:
+        glc=np.ones(nf)
+        glc.astype(int)
+    else:
+        glc=np.zeros(nf)
+        glc.astype(int)      
+        
     if len(tresp[0,:])!=nf:
         print('Tresp needs to be the same number of wavelengths/filters as the data.')
     
@@ -136,7 +143,10 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     tr=np.zeros([nt,nf])
     for i in np.arange(nf):
-        tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
+#         This really should be be interp in log-space
+        tr[:,i]=10**np.interp(logt,tresp_logt,np.log10(truse[:,i]))
+#     Previous version
+#         tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
 
     rmatrix=np.zeros([nt,nf])
     #Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
@@ -145,9 +155,6 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     #Just scale so not dealing with tiny numbers
     sclf=1E15
     rmatrix=rmatrix*sclf
-#     #time it
-#     t_start = time.Time.now()
-
 
     dn1d=np.reshape(dn,[nx*ny,nf])
     edn1d=np.reshape(edn,[nx*ny,nf])
@@ -162,7 +169,8 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 # *****************************************************
 #  Actually doing the DEM calculations
 # *****************************************************
-# Do we have an initial DEM guess/constraint to send to demmap_pos as well?
+# Should always be just running the first part of if here as setting dem01d to array of 1s if nothing given
+# So now more a check dimensions of things are correct 
     if ( dem0.ndim==dn.ndim ):
         dem01d=np.reshape(dem0,[nx*ny,nt])
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
@@ -177,8 +185,5 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     elogt=(np.reshape(elogt1d,[ny,nx,nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
     chisq=(np.reshape(chisq1d,[nx,ny])).squeeze()
     dn_reg=(np.reshape(dn_reg1d,[nx,ny,nf])).squeeze()
-    #end the timing
-#     t_end = time.Time.now()
-#     print('total elapsed time =', (t_end-t_start).to_value('datetime'))
-# #     print('total elapsed time =', time.Time(t_end-t_start,format='datetime'))
+
     return dem,edem,elogt,chisq,dn_reg
