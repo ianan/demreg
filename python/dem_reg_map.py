@@ -1,4 +1,5 @@
 import numpy as np
+
 def dem_reg_map(sigmaa,sigmab,U,W,data,err,reg_tweak,nmu=500):
     """
     dem_reg_map
