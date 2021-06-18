@@ -1,10 +1,5 @@
 import numpy as np
-import scipy.interpolate
-import astropy.units as u
-from astropy.units import imperial
 from demmap_pos import demmap_pos
-imperial.enable()
-
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,rgt_fact=1.5,dem_norm0=None):
     """
@@ -34,18 +29,20 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     --------------------
 
     dem_norm0:
-        Highly recommended optional input!! This is an array of length nt which contains an initial guess of the DEM 
-        solution providing a weighting for the inversion process. The actual values of the normalisation do not matter,
-        only their relative values. Without dem_norm0 set the initial guess is taken as an arrays of 1 (i.e. all temperatures
-        weighted equally)
+        This is an array of length nt which contains an initial guess of the DEM solution providing a weighting 
+        for the inversion process (L constraint matrix). The actual values of the normalisation 
+        do not matter, only their relative values. 
+        If no dem_norm0 given then L weighting based on value of gloci (0 is default)
+    gloci:
+        If no dem_norm0 given (or dem_norm0 array of 1s) then set gloci 1 or 0 (default 0) to choose weighting for the 
+        inversion process (L constraint matrix).
+        1: uses the min of EM loci curves to weight L.
+        0: uses two reg runs - first with L=diag(1/dT) and DEM result from this used to weight L for second run. 
     reg_tweak:
         the initial normalised chisq target.
     max_iter:
-        the maximum number of iterations to attempt, code iterates if negative DEM os reached. If max iter is reached before
+        the maximum number of iterations to attempt, code iterates if negative DEM is produced. If max iter is reached before
         a suitable solution is found then the current solution is returned instead (which may contain negative values)
-    gloci:
-        array of maximum length nf containing the indexes of the filters of which to use a loci curve as the dem_normalisation.
-        can be used in place of dem_norm0
     rgt_fact:
         the factor by which rgt_tweak increases each iteration. As the target chisq increases there is more flexibility allowed 
         on the DEM

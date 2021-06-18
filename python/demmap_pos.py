@@ -1,12 +1,12 @@
 import numpy as np
 from numpy import diag
-import scipy
-import concurrent.futures
 from dem_inv_gsvd import dem_inv_gsvd
 from dem_reg_map import dem_reg_map
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-import pdb
+from threadpoolctl import threadpool_limits
+
 def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None):
     """
     demmap_pos
@@ -58,7 +58,8 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dlogt
         size of the temperature bins
     glc
-        indices of the filters for which gloci curves should be used to set the initial L constraint.
+        indices of the filters for which gloci curves should be used to set the initial L constraint
+        (if called from dn2dem_pos, then all 1s or 0s)
 
     Optional inputs
 
@@ -104,45 +105,42 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     #do we have enough dem's to make parallel make sense?
     if (na>=256):
         n_par = 128
-#         print('Executing in parallel using concurrent futures')
         niter=(int(np.floor((na)/n_par)))
-
-
-        with ProcessPoolExecutor() as exe:
-            futures=[exe.submit(dem_unwrap, dd[i*n_par:(i+1)*n_par,:],ed[i*n_par:(i+1)*n_par,:],rmatrix,logt,dlogt,glc, \
+#       Put this here to make sure running dem calc in parallel, not the underlying np/gsvd stuff (this correct/needed?)  
+        with threadpool_limits(limits=1):
+            with ProcessPoolExecutor() as exe:
+                futures=[exe.submit(dem_unwrap, dd[i*n_par:(i+1)*n_par,:],ed[i*n_par:(i+1)*n_par,:],rmatrix,logt,dlogt,glc, \
                     reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i*n_par:(i+1)*n_par,:]) \
                         for i in np.arange(niter)]
-            kwargs = {
-                'total': len(futures),
-                'unit': 'DEM',
-                'unit_scale': True,
-                'leave': True
-                }
-            for f in tqdm(as_completed(futures), **kwargs):
-                pass
-        for i,f in enumerate(futures):
-        #store the outputs in arrays
-            dem[i*n_par:(i+1)*n_par,:]=f.result()[0]
-            edem[i*n_par:(i+1)*n_par,:]=f.result()[1]
-            elogt[i*n_par:(i+1)*n_par,:]=f.result()[2]
-            chisq[i*n_par:(i+1)*n_par]=f.result()[3]
-            dn_reg[i*n_par:(i+1)*n_par,:]=f.result()[4]
-        #if there are any remaining dems then execute remainder in serial
-        if (np.mod(na,niter*n_par) != 0):
-            i_start=niter*n_par
-            for i in range(na-i_start):
-                result=dem_pix(dd[i_start+i,:],ed[i_start+i,:],rmatrix,logt,dlogt,glc, \
-                    reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i_start+i,:])
-                dem[i_start+i,:]=result[0]
-                edem[i_start+i,:]=result[1]
-                elogt[i_start+i,:]=result[2]
-                chisq[i_start+i]=result[3]
-                dn_reg[i_start+i,:]=result[4]
+                kwargs = {
+                    'total': len(futures),
+                    'unit': 'DEM',
+                    'unit_scale': True,
+                    'leave': True
+                    }
+                for f in tqdm(as_completed(futures), **kwargs):
+                    pass
+            for i,f in enumerate(futures):
+            #store the outputs in arrays
+                dem[i*n_par:(i+1)*n_par,:]=f.result()[0]
+                edem[i*n_par:(i+1)*n_par,:]=f.result()[1]
+                elogt[i*n_par:(i+1)*n_par,:]=f.result()[2]
+                chisq[i*n_par:(i+1)*n_par]=f.result()[3]
+                dn_reg[i*n_par:(i+1)*n_par,:]=f.result()[4]
+            #if there are any remaining dems then execute remainder in serial
+            if (np.mod(na,niter*n_par) != 0):
+                i_start=niter*n_par
+                for i in range(na-i_start):
+                    result=dem_pix(dd[i_start+i,:],ed[i_start+i,:],rmatrix,logt,dlogt,glc, \
+                        reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i_start+i,:])
+                    dem[i_start+i,:]=result[0]
+                    edem[i_start+i,:]=result[1]
+                    elogt[i_start+i,:]=result[2]
+                    chisq[i_start+i]=result[3]
+                    dn_reg[i_start+i,:]=result[4]
         
     #else we execute in serial
     else:   
-#         print('Executing in serial')
-
         for i in range(na):
             result=dem_pix(dd[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \
                 reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:])
@@ -225,8 +223,6 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
                 for ttt in np.arange(nt):
                     dem_model[ttt]=np.min(emloci[ttt,np.nonzero(emloci[ttt,:])])
                 dem_reg_lwght=dem_model
-#                 print('gloci')
-#                 print(dem_reg_lwght)
 #                ~~~~~~~~~~~~~~~~~ 
 #             2. Or if nothing selected will run reg once, and use solution as weighting (self norm appraoch)
             else:
@@ -247,8 +243,6 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
                 mask=np.where(dr0 > 0) and (dr0 > fcofmax*np.max(dr0))
                 dem_reg_lwght=np.ones(nt)
                 dem_reg_lwght[mask]=dr0[mask]
-#                 print('selfnorm')
-#                 print(dem_reg_lwght)
 #                ~~~~~~~~~~~~~~~~~ 
 #            Just smooth these inital dem_reg_lwght and max sure no value is too small
             dem_reg_lwght=(np.convolve(dem_reg_lwght[1:-1],np.ones(5)/5))[1:-1]/np.max(dem_reg_lwght[:])     
