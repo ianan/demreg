@@ -245,7 +245,8 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
                 dem_reg_lwght[mask]=dr0[mask]
 #                ~~~~~~~~~~~~~~~~~ 
 #            Just smooth these inital dem_reg_lwght and max sure no value is too small
-            dem_reg_lwght=(np.convolve(dem_reg_lwght[1:-1],np.ones(5)/5))[1:-1]/np.max(dem_reg_lwght[:])     
+#             dem_reg_lwght=(np.convolve(dem_reg_lwght,np.ones(3)/3))[1:-1]/np.max(dem_reg_lwght[:])     
+            dem_reg_lwght=(np.convolve(dem_reg_lwght[1:-1],np.ones(5)/5))[1:-1]/np.max(dem_reg_lwght[:])       
             dem_reg_lwght[dem_reg_lwght<=1e-8]=1e-8
         else:
 #             Otherwise just set dem_reg to inputted weight   
