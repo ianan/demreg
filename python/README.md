@@ -8,7 +8,7 @@ This repo contains main python code needed and some nice jupyter notebook exampl
 * [dn2dem_pos.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos.py) Wrapper to use data (single set or map) with demmap_pos.py
 * [demmap_pos.py](https://github.com/ianan/demreg/blob/master/python/demmap_pos.py) Main DEMReg code (input is spatial 1D of data)
 
-Main development is by Alasdair Wilson see [https://github.com/alasdairwilson/demreg-py](https://github.com/alasdairwilson/demreg-py), with examples for working with actual AIA data.
+Main development was by Alasdair Wilson see [https://github.com/alasdairwilson/demreg-py](https://github.com/alasdairwilson/demreg-py), with examples there for working with AIA maps.
 
 If you use this code please reference back to [Hannah & Kontar (2012)](https://doi.org/10.1051/0004-6361/201117576) and [Hannah & Kontar (2013)](https://doi.org/10.1051/0004-6361/201219727).
 
