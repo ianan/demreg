@@ -48,6 +48,7 @@
 ;   16- Sept-2005: now plots to display and eps files
 ;  21-Jul-2011	Program and Variable names changed    IGH
 ;  21-Jul-2011	Commented out plotting of picard condition IGH
+;  12-Apr-2022  Commented out un-needed arg2, SV, data_u and c
 ;-
 
 
@@ -76,17 +77,16 @@ pro dem_inv_reg_parameter,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt
     for i=0,Nmu-1 do begin
       arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/(SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2
     end
-    arg2[k,*]=sqrt(arg[k,*])/Err[k]
+;    arg2[k,*]=sqrt(arg[k,*])/Err[k]
   end
-
   discr=total(arg,1)-total(err*err)*reg_tweak
 
   minimum=min(abs(discr),Min_index)
   opt=mu[Min_index]
 
-  SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
-  Data_U=abs(data##u)
-  C=data_u*SV
+;  SV=abs(sigmaA)/abs(SigmaA^2+opt*SigmaB^2)
+;  Data_U=abs(data##u)
+;  C=data_u*SV
 
   ;****************************************************************************************
   ;window,4,xsize=600,ysize=600,title='Regularization parameter and Picard condition'
