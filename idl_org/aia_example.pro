@@ -10,9 +10,9 @@
 
 
 ; Need to make the response functions?
-if (file_test('aia_resp.dat') eq 0) then $
-  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
-restore,file='aia_resp.dat'
+;if (file_test('aia_resp.dat') eq 0) then $
+;  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
+restore,file='old_aia_respn.dat'
 
 ; ; order of filters to use
 ;; don't want 304

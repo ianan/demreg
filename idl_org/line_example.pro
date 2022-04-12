@@ -30,16 +30,18 @@ order=0
 ; ;control the regularization parameter/chisq of result in DEM space: reg_tweak=1
 reg_tweak=1
 ; ;Use guess solution in final regularization? default is no, guess=0.
-guess=1
+guess=0
 ;; Use the min of the EM loci curves as the initial guess solution
 ;; used to weight/create the constraint matrix and possibly in the regularization itself (if guess=1)
 gloci=0
+;; Also choose reg parameter to that gives a positive DEM?
+pos=1
 
 ; run the regularization
 reg=data2dem_reg(logT, CFmatrix, line_in, eline_in,$
   mint=5.0, maxt=6.7, nt=50, $
   order=order,reg_tweak=reg_tweak, guess=guess, $
-  channels=cf.line,gloci=gloci)
+  channels=cf.line,gloci=gloci,pos=pos)
 
 ; now to plot the results....
 loadct,39
