@@ -252,14 +252,16 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
 #             Otherwise just set dem_reg to inputted weight   
             dem_reg_lwght=dem_norm0
 
-    
-#          Now actually do the dem regularisation using the L weighting from above
+#       Now actually do the dem regularisation using the L weighting from above
+#       Faster to do this and the GSVD on R and L before the pos loop 
+        L=np.diag(np.sqrt(dlogt)/np.sqrt(abs(dem_reg_lwght))) 
+        sva,svb,U,V,W = dem_inv_gsvd(rmatrixin.T,L)
 #  If set max_iter to 1 then wont have the pos constraint? As need following to run at least once
         while((ndem > 0) and (piter < max_iter)):
-            #make L from 1/dem reg scaled by dlogt and diagonalise
-            L=np.diag(np.sqrt(dlogt)/np.sqrt(abs(dem_reg_lwght))) 
-            #call gsvd and reg map
-            sva,svb,U,V,W = dem_inv_gsvd(rmatrixin.T,L)
+            # #make L from 1/dem reg scaled by dlogt and diagonalise
+            # L=np.diag(np.sqrt(dlogt)/np.sqrt(abs(dem_reg_lwght))) 
+            # #call gsvd and reg map
+            # sva,svb,U,V,W = dem_inv_gsvd(rmatrixin.T,L)
             lamb=dem_reg_map(sva,svb,U,W,dn,edn,rgt,nmu)
             for kk in np.arange(nf):
                 filt[kk,kk]=(sva[kk]/(sva[kk]**2+svb[kk]**2*lamb))
