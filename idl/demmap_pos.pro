@@ -89,8 +89,9 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
   ; 27-Apr-2016 IGH - Added in option to supply initial guess/constraint normalized DEM to weight L
   ; 19-May-2016 IGH - Added in check for dem_norm0, if supplied but any <=0 then ignore
   ;                       Also tweaked testing that data in all filters >0 via product()
-  ; 02-Aug-2016 IGH - Renamed variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg      
-  ; 20-Sep-2019 IGH - Added check for Nan/Inf as well as 0s before doing the calculation             
+  ; 02-Aug-2016 IGH - Renamed variable using dem_norm to dem_reg_wght to avoid bug/conflict with solution dem_reg
+  ; 20-Sep-2019 IGH - Added check for Nan/Inf as well as 0s before doing the calculation
+  ; 22-Apr-2022 IGH - Moved final L calc and GSVD out of the pos loop, faster if just calc before
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -125,7 +126,7 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
     edn=ednin/ednin
 
     ; Test if any of the data is 0, if so can just ignore this one
-;    if (product(dn) gt 0.) then begin
+    ;    if (product(dn) gt 0.) then begin
     ; Added extra text in case any of the data is NaNs or Infs
     if (product(dn,/nan) gt 0. and product(finite(dn)) gt 0.) then begin
       ; reset the positive check
@@ -136,17 +137,17 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       L=dblarr(nT,nT)
       ; If you have supplied an initial guess/constraint normalized DEM then don't
       ; need to calculate one (either from L=1/sqrt(dLogT) or min of EM loci)
-      
-      ; Though need to check what you have supplied is correct dimension 
+
+      ; Though need to check what you have supplied is correct dimension
       ; and no element 0 or less.
       test_dem_reg=0
 
       if (n_elements(dem_reg_wght) eq nt) then begin
         if (product(dem_reg_wght) gt 0) then test_dem_reg=1
       endif
-      
+
       if (test_dem_reg eq 0) then begin
-          if (total(glc) gt 0.) then begin
+        if (total(glc) gt 0.) then begin
           ; use the min of the emloci as the initial dem_reg
           gdglc=where(glc gt 0,ngdglc)
           emloci=dblarr(nt,ngdglc)
@@ -186,21 +187,20 @@ pro demmap_pos,dd,ed,rmatrix,logt,dlogt,glc,dem,chisq,$
       ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+      ; Faster and similar results in just do the GSVD on R and L here
+      ; And not updated L each time
+      for kk=0, nt-1 do L[kk,kk]=sqrt(dlogT[kk])/sqrt(abs(dem_reg[kk]))
+      dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
+
       ; ######## Still don't have a positive DEM_reg (or reached max_iter?) ########
       while(ndem gt 0 and piter lt max_iter) do begin
 
         ;################ Use first DEM_reg to weight L ###########################
-        ;################ or from last lop   ######################################
-
-        ; old version 0th order was sqrt(dlogT)/sqrt(dem_reg)
-        for kk=0, nt-1 do L[kk,kk]=sqrt(dlogT[kk])/sqrt(abs(dem_reg[kk]))
-        ; Better with dT than dlogT - probably not from synthetic tests.
-        ; for kk=0, nt-1 do L[kk,kk]=sqrt((10^(logt[kk]+0.5*dlogt[kk])-$
-        ;         10^(logt[kk]-0.5*dlogt[kk])))/sqrt(abs(dem_reg[kk]))
-
+        ;################ or from last loop   ######################################
+;        for kk=0, nt-1 do L[kk,kk]=sqrt(dlogT[kk])/sqrt(abs(dem_reg[kk]))
+;        dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
         ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        dem_inv_gsvdcsq,RMatrixin,L,sva,svb,U,V,W
         dem_inv_reg_parameter_map,sva,svb,U,W,DN,eDN,rgt,lamb,nmu
 
         ;################ Work out the inverse of K (Rmatrixin) ####################
