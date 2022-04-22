@@ -132,17 +132,17 @@ Now to get a useful solution we need to choose a suitable ${\bf L}$ and $\lambda
 \vspace{-10pt}
 \subsection*{Choosing constraint matrix ${\bf L}$}
 
-Generally we are considering zero order regularisation, which means that ${\bf L} \propto {\bf I}$ and so should have no non-diagonal terms. In practice, the diagonal terms of ${\bf L}$ are usually normalised by some values, typically either the temperature bin width or where appropriate, some expected form of the final solution (this is not the same as the guess solution $\boldsymbol{\xi}_0$). For instance the minimum of the EM loci curves $\boldsymbol{\xi}_{mlc}$, taken as a smoothed and normalised version of the lowest of all the emission measures found at each temperature assuming an isothermal solution (i.e. for each temperature $T_j$ that is the minimum of $g_i/K_{ij}$ for all $i$).
+Generally we are considering zero order regularization, which means that ${\bf L} \propto {\bf I}$ and so should have no non-diagonal terms. In practice, the diagonal terms of ${\bf L}$ are usually normalised by some values, typically either the temperature bin width or where appropriate, some expected form of the final solution (this is not the same as the guess solution $\boldsymbol{\xi}_0$). For instance the minimum of the EM loci curves $\boldsymbol{\xi}_{mlc}$, taken as a smoothed and normalised version of the lowest of all the emission measures found at each temperature assuming an isothermal solution (i.e. for each temperature $T_j$ that is the minimum of $g_i/K_{ij}$ for all $i$).
 
 
 \vspace{-10pt}
-\subsection*{Choosing regularisation parameter $\lambda$}
+\subsection*{Choosing regularization parameter $\lambda$}
 
-The regularisation parameter $\lambda$ can be found based on the $\boldsymbol{\xi}_\lambda$ in Eqn~\ref{eqn:sol}, that matches some additional conditions. The standard one is from Morozov's discrepancy principle, namely
+The regularization parameter $\lambda$ can be found based on the $\boldsymbol{\xi}_\lambda$ in Eqn~\ref{eqn:sol}, that matches some additional conditions. The standard one is from Morozov's discrepancy principle, namely
 \begin{equation}
     \frac{1}{M}\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho
 \end{equation}
-where $\rho$ is the regularisation tweak parameter, which is effectively controlling the $\chi^2$ of the solution in data space. So by default are aiming for $\rho=1$. Given that the real observations have an associated uncertainty $\delta g_i$ then we could expect that the best value of $\lambda$ is such that 
+where $\rho$ is the regularization tweak parameter, which is effectively controlling the $\chi^2$ of the solution in data space. So by default are aiming for $\rho=1$. Given that the real observations have an associated uncertainty $\delta g_i$ then we could expect that the best value of $\lambda$ is such that 
 \begin{equation}
     \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho \left\| {\bf \delta g}\right\|^2 .
 \end{equation}
