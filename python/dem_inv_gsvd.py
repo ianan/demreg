@@ -51,7 +51,7 @@ def dem_inv_gsvd(A,B):
     alpha=s*beta
 
     #diagonalise alpha and beta into SA and SB
-    onea=np.diag(alpha)
+    #onea=np.diag(alpha)
     oneb=np.diag(beta)
      #calculate the w matrix
     # w=inv(inv(onea)@transpose(u)@A)
