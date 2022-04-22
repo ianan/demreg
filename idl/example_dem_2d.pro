@@ -46,8 +46,8 @@ pro example_dem_2d
   TRmatrix=TRmatrix[gdt,*]
   root2pi=sqrt(2.*!PI)
 
-  nx=50
-  ny=50
+  nx=75
+  ny=75
   dn=dblarr(nx,ny,6)
   edn=dblarr(nx,ny,6)
   demmods=dblarr(nx,ny,n_elements(tr_logt))

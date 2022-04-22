@@ -59,6 +59,7 @@
 ;   20- Sept-2005: corrected SVDC routine output - re-ordering SValues and SVectors
 ;   Note: SVDC produces non-decreasing singular values
 ;  21-Jul-2011	Program and Variable names changed    IGH
+;  22-Apr-2022  Commented out unnecessary OneA calc
 ;-
 
 pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
@@ -81,13 +82,12 @@ pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
   ;singular values
 
   OneB=dblarr(N_elements(Sigma),N_elements(Sigma))
-  OneA=dblarr(N_elements(Sigma),N_elements(Sigma))
+;  OneA=dblarr(N_elements(Sigma),N_elements(Sigma))
 
   for i=0, N_elements(Sigma)-1 DO OneB(i,i)=betta(i)
-  for i=0, N_elements(Sigma)-1 DO OneA(i,i)=alpha(i)
+;  for i=0, N_elements(Sigma)-1 DO OneA(i,i)=alpha(i)
   ; scaling
 
   W=invert(invert(oneB)##transpose(V)##B)
-  ;finding W (not the best way)
 
 end
