@@ -65,7 +65,7 @@ pro example_dem_pxl
   
   dn2dem_pos_nb, dn, edn,TRmatrix,tr_logt,temps,dem,edem,elogt,chisq,dn_reg,/timed;,/gloci,glcindx=[0,1,1,1,1,1]
 
-  yr=d1*[5e-3,1e1]
+  yr=d1*[5e-5,1e1]
   !p.thick=2
   plot,tr_logt,dem_mod,/ylog,chars=2,xtit='Log!D10!N T', ytit='DEM [cm!U-5!N K!U-1!N]',yrange=yr,ystyle=17,xstyle=17
   loadct,39,/silent

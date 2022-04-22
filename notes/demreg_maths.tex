@@ -1,0 +1,207 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx,xcolor,titlesec,pdfpages}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{natbib}
+\bibpunct{(}{)}{;}{a}{}{,}
+\setlength{\bibsep}{2pt}
+\setlength{\bibhang}{50pt}
+
+% \usepackage{aas_macros}
+
+% \usepackage{bibunits}
+\newcommand{\aap}{A\&A}
+\newcommand{\aaps}{A\&A Supp}
+\newcommand{\aapr}{A\&A Rev}
+\newcommand{\apj}{ApJ}
+\newcommand{\apjl}{ApJ Lett}
+\newcommand{\apjs}{ApJS}
+\newcommand{\solphys}{Sol. Phys.}
+\newcommand{\etal}{\emph{et al}}
+\newenvironment{itemize*}
+{\begin{itemize} \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}}
+{\end{itemize}}
+
+
+\usepackage{soul}
+\usepackage{fancyhdr}
+\pagestyle{fancy} \fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[R]{DEMreg/Hannah [\thepage]}
+
+% Changing fonts in overleaf
+% see https://www.overleaf.com/learn/latex/font_typefaces
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{charter}
+% \usepackage{tgtermes}
+\usepackage{parskip}
+\urlstyle{rm}
+
+\title{Maths of the DEMreg approach}
+\author{Iain Hannah}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle\thispagestyle{fancy}
+
+More details see \citet{2012A&A...539A.146H,2013A&A...553A..10H,2004SoPh..225..293K,1992InvPr...8..849H}.
+
+\vspace{-10pt}
+\subsection*{Regularization to solve DEM problem}
+
+The observed data $g$ per channel/filter $i$ is related to the underlying differential emission measure DEM $\xi(T_j)=n^2 dh/dT$ [cm$^{-5}$ K$^{-1}$] and the temperature response $K_{ij}$ as:
+\begin{equation}\label{eqn:org}
+    g_i=\int K_{ij}\;\xi(T_j)\; dT.
+\end{equation}
+
+This can also be written as a series of linear equations:
+\begin{equation}\label{eqn:le}
+    g_i=K_{ij}\xi_j
+\end{equation}
+where we have $i=1,...,M$ and $j=1,...,N$ and typically $M<N$ (i.e. have 6 SDO/AIA channels and if we wanted to recover a DEM with 30 temperature bins, so $M=6$ and $N=30$). To solve this problem and recover the DEM really trying to find a minimum to the following:
+\begin{equation}\label{eqn:lsq}
+    \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2=\mbox{min}
+\end{equation}
+This is an ill-posed inversion problem and so the addition of linear constraints can be used to recover a solution without the amplification of noise, and a zero-order regularization is often used which selects the smallest norm solution out of the infinitely many possible solutions. So instead of solving Eqn~\ref{eqn:lsq} we actually want to solve:
+
+\begin{equation}
+    \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2  =  \mathrm{min}  \;
+\mbox{subject to} \; \| {\bf L (\boldsymbol{\xi}-\boldsymbol{\xi_0})}\|^2\le \mathrm{const}
+\end{equation}
+
+which can be solved using Lagrangian multipliers, i.e.
+
+\begin{equation}\label{eqn:lc}
+    \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2 +\lambda\;\| {\bf L (\boldsymbol{\xi}-\boldsymbol{\xi_0})}\|^2=\mathrm{min}
+\end{equation}
+
+where ${\bf L}$ is the ``constraint matrix'', $\lambda$ is the ``regularization parameter'' and $\boldsymbol{\xi_0}$ is an optional guess solution. 
+
+\vspace{-10pt}
+\subsection*{GSVD to solve linear regularization}
+
+A solution to Eqn~\ref{eqn:lc} can be found via GSVD as a function of $\lambda$ \citep{1992InvPr...8..849H}. Here the GSVD of $\bf{K}\in \mathbb{R}^{M\times N}$ and $\bf{L}\in \mathbb{R}^{N\times N}$ produces a set of singular values $\alpha_k$, $\beta_k$ (with $\phi_k=\alpha_k/\beta_k$) and singular vectors
+${\bf u}_k, {\bf v}_k, {\bf w}_k$, with $k=1,...,N$ which satisfy $\alpha_k^2 +
+\beta_k^2=1$, ${\bf U^T {K}W}=\mathrm{diag}(\boldsymbol{\alpha})$ and ${\bf V^T
+LW}=\mathrm{diag}(\boldsymbol{\beta})$. Note that because in our case $M \leq N$, only the first $M$ elements of ${\bf u_k}$ and $\alpha_k$ are non-zero. 
+
+The solution is then, as given in \citet{1992InvPr...8..849H} Eqn 18
+\begin{equation}\label{eqn:sol}
+\boldsymbol{\xi}_\lambda =\sum_{k=1}^ M\left(f_k\frac{{\bf g}\cdot {\bf u}_k}{\alpha_k}
+ +(1-f_k) {\bf w}_k^{-1}\boldsymbol{\xi}_0 \right) {\bf w}_k,
+\end{equation}
+where the filter factors $f_k$ are given by
+\begin{equation}
+f_k=\frac{\phi_k^2}{\phi_k^2 +\lambda}=\frac{\alpha_k^2}{\alpha_k^2+\lambda\beta_k^2}\quad\mathrm{and}\quad
+1-f_k=\frac{\lambda\beta_k^2}{\alpha_k^2+\lambda\beta_k^2}.
+\end{equation}
+
+% \begin{equation}\label{eqn:sol}
+% \boldsymbol{\xi}_\lambda =\sum_{k=1}^ M\frac{\phi_k^2}{\phi_k^2+\lambda}\left(
+% \frac{({\bf g}\cdot {\bf u}_k){\bf w}_k}{\alpha_k}+\frac{\lambda \xi_0\beta_k^2}{\alpha_k^2}
+% \right),
+% \end{equation}
+
+In the code Eqn~\ref{eqn:sol} is implemented as
+\begin{equation}\label{eqn:solcode}
+ \boldsymbol{\xi}_\lambda =\sum_{k=1}^ M\frac{\left(\alpha_k({\bf g}\cdot {\bf u}_k\right)+\lambda\beta_k^2{\bf w}_k^{-1}\boldsymbol{\xi}_0){\bf w}_k}{\alpha_k^2 + \lambda\beta_k^2}.
+\end{equation}
+This is how it is done in the original idl code\footnote{\href{https://github.com/ianan/demreg/blob/master/idl_org/dem_inv_reg_solution.pro}{idl\_org/dem\_inv\_reg\_solution.pro}} that accompanied \citet{2012A&A...539A.146H}. In the map versions \citep{2013A&A...553A..10H} of the idl\footnote{\href{https://github.com/ianan/demreg/blob/261a85156c5a91c77cdc55750c58d0f0dfc7be07/idl/demmap_pos.pro}{idl/demmap\_pos.pro}} and python\footnote{\href{https://github.com/ianan/demreg/blob/261a85156c5a91c77cdc55750c58d0f0dfc7be07/python/demmap_pos.py}{python/demmap\_pos.py}} code no guess solution is used and $\boldsymbol{\xi}_\lambda$ is calculated in a slightly different manner, with the regularized inversion of ${\bf K}$, ${\bf R_\lambda \simeq K^\dag}$ being directly calculated as
+\begin{equation}\label{eqn:solmapcode}
+ {\bf R}_\lambda =\sum_{k=1}^ M\frac{\alpha_k\left({\bf u}_k {\bf w}_k\right)}{\alpha_k^2 + \lambda\beta_k^2}.
+\end{equation}
+The DEM solution is then found via $\boldsymbol{\xi}_\lambda = {\bf R}_\lambda {\bf g}$. It is done this way as ${\bf R_\lambda}$ is used for estimating the temperature resolution\footnote{\href{https://github.com/ianan/demreg/blob/master/idl_org/dem_inv_reg_resolution.pro}{idl\_org/dem\_inv\_reg\_resolution.pro}} of the DEM solution, so does not need to be computed separately in the map versions where computational speed is more desirable.
+
+Note that:
+% \vspace{-10pt}
+\begin{itemize*}
+\vspace{-5pt}
+    \item \cite{2012A&A...539A.146H} Eqn 6, $\boldsymbol{\xi}_0$ term not quite correct but correct in code.
+    \item \cite{2004SoPh..225..293K} Eqn 24, no initial guess but is in the code\footnote{\href{https://hesperia.gsfc.nasa.gov/ssw/packages/xray/idl/inversion/inv_reg_solution.pro}{ssw/packages/xray/idl/inversion/inv\_reg\_solution.pro}}.
+    \item \citet{1992InvPr...8..849H} Eqn 15, $\lambda^2$ is the regularization parameter, instead of $\lambda$ here.
+\end{itemize*} 
+
+Now to get a useful solution we need to choose a suitable ${\bf L}$ and $\lambda$.
+
+\newpage
+\vspace{-10pt}
+\subsection*{Choosing constraint matrix ${\bf L}$}
+
+Generally we are considering zero order regularisation, which means that ${\bf L} \propto {\bf I}$ and so should have no non-diagonal terms. In practice, the diagonal terms of ${\bf L}$ are usually normalised by some values, typically either the temperature bin width or where appropriate, some expected form of the final solution (this is not the same as the guess solution $\boldsymbol{\xi}_0$). For instance the minimum of the EM loci curves $\boldsymbol{\xi}_{mlc}$, taken as a smoothed and normalised version of the lowest of all the emission measures found at each temperature assuming an isothermal solution (i.e. for each temperature $T_j$ that is the minimum of $g_i/K_{ij}$ for all $i$).
+
+
+\vspace{-10pt}
+\subsection*{Choosing regularisation parameter $\lambda$}
+
+The regularisation parameter $\lambda$ can be found based on the $\boldsymbol{\xi}_\lambda$ in Eqn~\ref{eqn:sol}, that matches some additional conditions. The standard one is from Morozov's discrepancy principle, namely
+\begin{equation}
+    \frac{1}{M}\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho
+\end{equation}
+where $\rho$ is the regularisation tweak parameter, which is effectively controlling the $\chi^2$ of the solution in data space. So by default are aiming for $\rho=1$. Given that the real observations have an associated uncertainty $\delta g_i$ then we could expect that the best value of $\lambda$ is such that 
+\begin{equation}
+    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho \left\| {\bf \delta g}\right\|^2 .
+\end{equation}
+
+So the optimal $\lambda$ should satisfy 
+\begin{equation}\label{eqn:desc}
+    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  -  \rho \left\| {\bf \delta g}\right\|^2 = \mathrm{min}.
+\end{equation}
+
+From \citet{1992InvPr...8..849H} Eqn 20, the term $\left\|\bf{K\boldsymbol{\xi}-g}\right\|^2$ can be directly calculated from the GSVD products, namely
+\begin{equation}\label{eqn:sol2}
+\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2=\sum_{k=1}^ M (1-f_k)^2\left(
+{\bf g}\cdot {\bf u}_k - \alpha_k{\bf w}_k^{-1}\boldsymbol{\xi}_0
+\right)^2.
+\end{equation}
+
+In the code Eqn~\ref{eqn:sol2} is implemented as
+\begin{equation}\label{eqn:finarg}
+    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2=\sum_{k=1}^ M \left(\frac{\lambda\beta_k^2\left({\bf g}\cdot {\bf u}_k-\alpha_k{\bf w}_k^{-1}\boldsymbol{\xi}_0\right)}{\alpha_k^2 + \lambda\beta_k^2}\right)^2.
+\end{equation}
+
+This is how it is done in the original idl code\footnote{\href{https://github.com/ianan/demreg/blob/master/idl_org/dem_inv_reg_parameter.pro}{idl\_org/dem\_inv\_reg\_parameter.pro}}. In the map versions the idl\footnote{\href{https://github.com/ianan/demreg/blob/master/idl/dem_inv_reg_parameter_map.pro}{idl/dem\_inv\_reg\_parameter\_map.pro}} and python\footnote{\href{https://github.com/ianan/demreg/blob/master/python/dem_reg_map.py}{python/dem\_reg\_map.py}} code Eqn~\ref{eqn:finarg} should have used just the $\left({\bf g}\cdot {\bf u}_k\right)$ in the numerator brackets as no guess solution, i.e. $\boldsymbol{\xi}_0$. However $\left({\bf g}\cdot {\bf u}_k-\alpha_k\right)$ was used, which might have affected the determination of the optimal $\lambda$, but crucially the $\boldsymbol{\xi}_\lambda$ calculation in all version was correct. This has now been corrected in the map versions of the code.
+
+In all versions of the code Eqn~\ref{eqn:finarg} is calculated for a range of $\lambda$ parameters (the range determined by a scaling of the min and max of the $\phi_k$ values) and then the left hand side of Eqn~\ref{eqn:desc} is calculated for each, and the $\lambda$ giving the smallest solution is selected.
+
+Using Eqn~\ref{eqn:desc} should provide the optimal mathematical solution but not necessarily the most physical one as it can return $\boldsymbol{\xi}_\lambda$ with some negative terms. So an additional ``positivity'' constraint can be invoked in which the chosen $\lambda$ needs to satisfy Eqn~\ref{eqn:desc} and $\boldsymbol{\xi}_\lambda >0$. In the original idl code\footnote{\href{https://github.com/ianan/demreg/blob/master/idl_org/dem_inv_reg_parameter_pos.pro}{idl\_org/dem\_inv\_reg\_parameter\_pos.pro}} this is achieved by calculating both Eqn~\ref{eqn:finarg} and Eqn~\ref{eqn:solcode} for a range of $\lambda$ and choosing the one matches the two criteria. For the map code (idl\footnote{\href{https://github.com/ianan/demreg/blob/master/idl/demmap_pos.pro}{idl/demmap\_pos.pro}} and python\footnote{\href{https://github.com/ianan/demreg/blob/master/python/demmap_pos.py}{python/demmap\_pos.py}}) Eqn~\ref{eqn:finarg} was found for a smaller number of $\lambda$ samples and if $\boldsymbol{\xi}_\lambda <0$, $\rho$ was increased iteratively and Eqn~\ref{eqn:finarg} recalculated until $\boldsymbol{\xi}_\lambda >0$ or a max number of iterations was reached. It was done this way as it was faster than calculating both Eqn~\ref{eqn:finarg} and Eqn~\ref{eqn:solcode} for a larger sample of $\lambda$ as done originally. Potentially could speed up original approach by finding a subset of $\lambda$ using one criteria and then only do second criteria calculation on this smaller sample, i.e. find the $\lambda$ that give $\boldsymbol{\xi}_\lambda > 0$ and then do Eqn~\ref{eqn:finarg} on that subset.
+
+\subsection*{Errors on the DEM solution}
+
+To be added, see \citet{2012A&A...539A.146H,2013A&A...553A..10H} and the code in the meantime.
+
+% \newpage
+\par\noindent\rule{0.5\textwidth}{0.4pt}
+
+% \bibliographystyle{aasjournal}
+% \bibliography{refs.bib}	
+\begin{thebibliography}{}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\href{#1}{#1}}
+\providecommand{\dodoi}[1]{doi:~\href{http://doi.org/#1}{\nolinkurl{#1}}}
+\providecommand{\doeprint}[1]{\href{http://ascl.net/#1}{\nolinkurl{http://ascl.net/#1}}}
+\providecommand{\doarXiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{https://arxiv.org/abs/#1}}}
+
+\bibitem[{{Hannah} \& {Kontar}(2012)}]{2012A&A...539A.146H}
+{Hannah}, I.~G., \& {Kontar}, E.~P. 2012, \aap, 539, A146,
+  \dodoi{10.1051/0004-6361/201117576}
+
+\bibitem[{{Hannah} \& {Kontar}(2013)}]{2013A&A...553A..10H}
+---. 2013, \aap, 553, A10, \dodoi{10.1051/0004-6361/201219727}
+
+\bibitem[{{Hansen}(1992)}]{1992InvPr...8..849H}
+{Hansen}, P.~C. 1992, Inverse Problems, 8, 849,
+  \dodoi{10.1088/0266-5611/8/6/005}
+
+\bibitem[{{Kontar} {et~al.}(2004){Kontar}, {Piana}, {Massone}, {Emslie}, \&
+  {Brown}}]{2004SoPh..225..293K}
+{Kontar}, E.~P., {Piana}, M., {Massone}, A.~M., {Emslie}, A.~G., \& {Brown},
+  J.~C. 2004, \solphys, 225, 293, \dodoi{10.1007/s11207-004-4140-x}
+
+\end{thebibliography}
+
+\end{document}

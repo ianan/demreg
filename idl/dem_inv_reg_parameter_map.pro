@@ -47,8 +47,9 @@
 ;  16-Sep-2005  EPK   now plots to display and eps files
 ;  21-Jul-2011	IGH   Program and Variable names changed 
 ;  21-Jul-2011	IGH   Commented out plotting of picard condition
-;- 30-Apr-2012  IGH   Speed increase by using lower nmu
+;  30-Apr-2012  IGH   Speed increase by using lower nmu
 ;  17-May-2012  IGH   mu range based on (sigmaa/sigmab)^2 instead of (sigmaa/sigmab) as faster
+;  20-Apr-2022  IGH   Deleted out sigma term in coef (as no guess)
 
 
 pro dem_inv_reg_parameter_map,sigmaA,SigmaB,U,W,Data,Err,reg_tweak,opt,nmu
@@ -69,7 +70,7 @@ pro dem_inv_reg_parameter_map,sigmaA,SigmaB,U,W,Data,Err,reg_tweak,opt,nmu
   mu=exp(findgen(Nmu)*step)*minx
 
   for k=0,Ndata-1 do begin
-    coef=data##u[k,*]-SigmaA[k]
+    coef=data##u[k,*]
     for i=0,Nmu-1 do begin
       arg[k,i]=(mu[i]*SigmaB[k]*SigmaB[k]*coef/$
         (SigmaA[k]*SigmaA[k]+mu[i]*SigmaB[k]*SigmaB[k]))^2

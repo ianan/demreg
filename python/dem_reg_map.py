@@ -43,7 +43,7 @@ def dem_reg_map(sigmaa,sigmab,U,W,data,err,reg_tweak,nmu=500):
     step=(np.log(maxx)-np.log(minx))/(nmu-1.)
     mu=np.exp(np.arange(nmu)*step)*minx
     for kk in np.arange(nf):
-        coef=data@U[kk,:]-sigmaa[kk]
+        coef=data@U[kk,:]
         for ii in np.arange(nmu):
             arg[kk,ii]=(mu[ii]*sigmab[kk]**2*coef/(sigmaa[kk]**2+mu[ii]*sigmab[kk]**2))**2
     

@@ -86,6 +86,5 @@ pro dem_inv_gsvdcsq, A,B, alpha,betta,U,V,W
   ; scaling
 
   W=invert(invert(oneB)##transpose(V)##B)
-  ;finding W (not the best way?)
 
 end
