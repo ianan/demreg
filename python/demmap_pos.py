@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 from tqdm import tqdm
 from threadpoolctl import threadpool_limits
 
-def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None):
+def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None,nmu=42,warn=False):
     """
     demmap_pos
     computes the dems for a 1 d array of length na with nf filters using the dn (g) counts and the temperature
@@ -71,6 +71,10 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         maximum number of times to attempt the gsvd before giving up, returns the last attempt if max_iter reached
     dem_norm0
         provides a "guess" dem as a starting point, if none is supplied one is created.
+    nmu
+        number of reg param samples to use
+    warn
+        print out warnings
     
     Outputs
 
@@ -102,7 +106,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg=np.zeros([na,nf])
     ednin=np.zeros([nf])
  
-    #do we have enough dem's to make parallel make sense?
+    #do we have enough DEM's to make parallel make sense?
     if (na>=256):
         n_par = 128
         niter=(int(np.floor((na)/n_par)))
@@ -110,7 +114,8 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         with threadpool_limits(limits=1):
             with ProcessPoolExecutor() as exe:
                 futures=[exe.submit(dem_unwrap, dd[i*n_par:(i+1)*n_par,:],ed[i*n_par:(i+1)*n_par,:],rmatrix,logt,dlogt,glc, \
-                    reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i*n_par:(i+1)*n_par,:]) \
+                    reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i*n_par:(i+1)*n_par,:],\
+                        nmu=nmu,warn=warn) \
                         for i in np.arange(niter)]
                 kwargs = {
                     'total': len(futures),
@@ -132,7 +137,8 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
                 i_start=niter*n_par
                 for i in range(na-i_start):
                     result=dem_pix(dd[i_start+i,:],ed[i_start+i,:],rmatrix,logt,dlogt,glc, \
-                        reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i_start+i,:])
+                        reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i_start+i,:],\
+                            nmu=nmu,warn=warn)
                     dem[i_start+i,:]=result[0]
                     edem[i_start+i,:]=result[1]
                     elogt[i_start+i,:]=result[2]
@@ -143,7 +149,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     else:   
         for i in range(na):
             result=dem_pix(dd[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \
-                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:])
+                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn)
             dem[i,:]=result[0]
             edem[i,:]=result[1]
             elogt[i,:]=result[2]
@@ -152,7 +158,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
 
     return dem,edem,elogt,chisq,dn_reg
 
-def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0):
+def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=False):
     #this nasty function serialises the parallel blocks
     ndem=dn.shape[0]
     nt=logt.shape[0]
@@ -164,7 +170,7 @@ def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg=np.zeros([ndem,nf])
     for i in range(ndem):
         result=dem_pix(dn[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \
-                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:])
+                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn)
         dem[i,:]=result[0]
         edem[i,:]=result[1]
         elogt[i,:]=result[2]
@@ -172,11 +178,11 @@ def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         dn_reg[i,:]=result[4]
     return dem,edem,elogt,chisq,dn_reg
 
-def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0):
+def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=True):
     
     nf=rmatrix.shape[1]
     nt=logt.shape[0]
-    nmu=42
+    # nmu=42
     ltt=min(logt)+1e-8+(max(logt)-min(logt))*np.arange(51)/(52-1.0)
     dem=np.zeros(nt)
     edem=np.zeros(nt)
@@ -272,6 +278,9 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             ndem=len(dem_reg_out[dem_reg_out < 0])
             rgt=rgt_fact*rgt
             piter+=1
+
+        if ((warn) and (piter == max_iter)):
+            print('Warning, positivity loop hit max iterations, so increase max_iter? Or rgt_fact too small?')
       
         dem=dem_reg_out
 
