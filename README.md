@@ -8,3 +8,5 @@ Note that this repo contains 3 versions of the DEMReg code:
 * Python version based off of [idl/](https://github.com/ianan/demreg/tree/master/idl) which again can take any data format and any instrument, in [python/](https://github.com/ianan/demreg/tree/master/python)
 
 The two sswidl versions should give similar results but the mapping version will be quicker.
+
+Versions of the idl versions of code here are the most up to date, including bug and typo fixes.
