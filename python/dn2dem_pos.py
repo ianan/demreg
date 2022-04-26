@@ -2,7 +2,7 @@ import numpy as np
 from demmap_pos import demmap_pos
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,\
-    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False):
+    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False):
     """
     Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
     using the method of Hannah & Kontar A&A 553 2013
@@ -18,12 +18,12 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     edn_in:
         The error on the dn values in the same units and same dimensions.
     tresp:
-        the temperature response matrix size n_tresp by nf
+        The temperature response matrix size n_tresp by nf
     tresp_logt:
-        the temperatures in log t which the temperature response matrix corresponds to. E.G if your tresp matrix 
+        The temperatures in log t which the temperature response matrix corresponds to. E.G if your tresp matrix 
         runs from 5.0 to 8.0 in steps of 0.05 then this is the input to tresp_logt
     temps:
-        the temperatures at which to calculate a DEM, array of length nt.
+        The temperatures at which to calculate a DEM, array of length nt.
 
     --------------------
     Optional Inputs:
@@ -40,33 +40,39 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
         1: uses the min of EM loci curves to weight L.
         0: uses two reg runs - first with L=diag(1/dT) and DEM result from this used to weight L for second run. 
     reg_tweak:
-        the initial normalised chisq target.
+        The initial normalised chisq target.
     max_iter:
-        the maximum number of iterations to attempt, code iterates if negative DEM is produced. If max iter is reached before
+        The maximum number of iterations to attempt, code iterates if negative DEM is produced. If max iter is reached before
         a suitable solution is found then the current solution is returned instead (which may contain negative values)
     rgt_fact:
-        the factor by which rgt_tweak increases each iteration. As the target chisq increases there is more flexibility allowed 
+        The factor by which rgt_tweak increases each iteration. As the target chisq increases there is more flexibility allowed 
         on the DEM
     nmu:
-        number of reg param samples to calculate (default (or <=40) 500 for 1D, 42 for map)
+        Number of reg param samples to calculate (default (or <=40) 500 for 1D, 42 for map)
     warn:
-        print out any warnings (always warn for 1D, default no for higher dim data)
+        Print out any warnings (always warn for 1D, default no for higher dim data)
+    emd_int:
+        Do the regularization in EMD [cm^-5] instead of DEM [cm^-5 K^-1] space? (default No). In some circumstances this 
+        does seem to help, but needs additional tweaking, so why it is not the default.
+    emd_ret:
+        Return EMD solution instead of EMD [cm^-5] instead of DEM [cm^-5 K^-1] (default No)
 
     --------------------
     Outputs:
     --------------------
 
     dem:
-        The DEM, has shape nx*ny*nt and units cm^-5 K^-1
+        The DEM, has shape nx*ny*nt and units out depends on the input units of tresp and setting of emd_ret
     edem:
-        vertical errors on the DEM, same units.
+        Vertical errors on the DEM, same units as DEM.
     elogt:
-        Horizontal errors on temperature.
+        Horizontal errors on temperature, as the name suggests in logT.
     chisq:
         The final chisq, shape nx*ny. Pixels which have undergone more iterations will in general have higher chisq.
     dn_reg:
-        The simulated dn counts, shape nx*ny*nf. This is obtained by multiplying the DEM(T) by the filter response K(f,T) for each channel
-        useful for comparing with the initial data.
+        The simulated dn counts, shape nx*ny*nf. This is obtained by multiplying the DEM(T) by the filter 
+        response K(f,T) for each channel, very important for comparing with the initial data.
+    
  
     """
     #create our bin averages:
@@ -165,8 +171,14 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
 
     rmatrix=np.zeros([nt,nf])
     #Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
-    for i in np.arange(nf):
-        rmatrix[:,i]=tr[:,i]*10.0**logt*np.log(10.0**dlogt)
+    dlogTfac=10.0**logt*np.log(10.0**dlogt)
+    # Do regularization of EMD or DEM 
+    if emd_int:
+        for i in np.arange(nf):
+            rmatrix[:,i]=tr[:,i]
+    else:
+        for i in np.arange(nf):
+            rmatrix[:,i]=tr[:,i]*dlogTfac
     #Just scale so not dealing with tiny numbers
     sclf=1E15
     rmatrix=rmatrix*sclf
@@ -201,4 +213,13 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     chisq=(np.reshape(chisq1d,[nx,ny])).squeeze()
     dn_reg=(np.reshape(dn_reg1d,[nx,ny,nf])).squeeze()
 
-    return dem,edem,elogt,chisq,dn_reg
+    # There's probably a neater way of doing this (and maybe provide info of what was done as well?)
+    # but fine for now as it works
+    if emd_int and emd_ret:
+        return dem,edem,elogt,chisq,dn_reg
+    if emd_int and not emd_ret:
+        return dem/dlogTfac,edem/dlogTfac,elogt,chisq,dn_reg
+    if not emd_int and emd_ret:
+        return dem*dlogTfac,edem*dlogTfac,elogt,chisq,dn_reg
+    if not emd_int and not emd_ret:
+        return dem,edem,elogt,chisq,dn_reg
