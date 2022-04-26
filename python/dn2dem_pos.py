@@ -2,7 +2,7 @@ import numpy as np
 from demmap_pos import demmap_pos
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,\
-    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False):
+    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False):
     """
     Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
     using the method of Hannah & Kontar A&A 553 2013
@@ -52,10 +52,14 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     warn:
         Print out any warnings (always warn for 1D, default no for higher dim data)
     emd_int:
-        Do the regularization in EMD [cm^-5] instead of DEM [cm^-5 K^-1] space? (default No). In some circumstances this 
-        does seem to help, but needs additional tweaking, so why it is not the default.
+        Do the regularization in EMD [cm^-5] instead of DEM [cm^-5 K^-1] space? (default False). In some circumstances this 
+        does seem to help (particularly at higher T), but needs additional tweaking, so why it is not the default.
     emd_ret:
-        Return EMD solution instead of EMD [cm^-5] instead of DEM [cm^-5 K^-1] (default No)
+        Return EMD solution instead of EMD [cm^-5] instead of DEM [cm^-5 K^-1] (default False)
+    l_emd:
+        Remove sqrt factor in constraint matrix, provides better solutions with EMD (and if higher T issues?) 
+        (default False, but True with emd_int=True)
+    
 
     --------------------
     Outputs:
@@ -174,6 +178,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     dlogTfac=10.0**logt*np.log(10.0**dlogt)
     # Do regularization of EMD or DEM 
     if emd_int:
+        l_emd=True
         for i in np.arange(nf):
             rmatrix[:,i]=tr[:,i]
     else:
@@ -201,11 +206,11 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     if ( dem0.ndim==dn.ndim ):
         dem01d=np.reshape(dem0,[nx*ny,nt])
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,\
-            reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem01d,nmu=nmu,warn=warn)
+            reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem01d,nmu=nmu,warn=warn,l_emd=l_emd)
     else:
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,\
             dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
-                rgt_fact=rgt_fact,dem_norm0=0,nmu=nmu,warn=warn)
+                rgt_fact=rgt_fact,dem_norm0=0,nmu=nmu,warn=warn,l_emd=l_emd)
     #reshape the 1d arrays to original dimensions and squeeze extra dimensions
     dem=((np.reshape(dem1d,[nx,ny,nt]))*sclf).squeeze()
     edem=((np.reshape(edem1d,[nx,ny,nt]))*sclf).squeeze()
