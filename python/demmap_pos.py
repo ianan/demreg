@@ -108,9 +108,9 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg=np.zeros([na,nf])
     ednin=np.zeros([nf])
  
-    #do we have enough DEM's to make parallel make sense?
-    if (na>=256):
-        n_par = 128
+    # do we have enough DEM's to make parallel make sense?
+    if (na>=200):
+        n_par = 100
         niter=(int(np.floor((na)/n_par)))
 #       Put this here to make sure running dem calc in parallel, not the underlying np/gsvd stuff (this correct/needed?)  
         with threadpool_limits(limits=1):
@@ -121,7 +121,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
                         for i in np.arange(niter)]
                 kwargs = {
                     'total': len(futures),
-                    'unit': 'DEM',
+                    'unit': ' x10^2 DEM',
                     'unit_scale': True,
                     'leave': True
                     }
