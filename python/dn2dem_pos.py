@@ -2,7 +2,7 @@ import numpy as np
 from demmap_pos import demmap_pos
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,\
-    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False):
+    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False,non_pos=False):
     """
     Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
     using the method of Hannah & Kontar A&A 553 2013
@@ -44,11 +44,12 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     max_iter:
         The maximum number of iterations to attempt, code iterates if negative DEM is produced. If max iter is reached before
         a suitable solution is found then the current solution is returned instead (which may contain negative values)
+        (Default is only 10 - although non_pos=True will set as 1)
     rgt_fact:
         The factor by which rgt_tweak increases each iteration. As the target chisq increases there is more flexibility allowed 
         on the DEM
     nmu:
-        Number of reg param samples to calculate (default (or <=40) 500 for 1D, 42 for map)
+        Number of reg param samples to calculate (default (or <=40) 500 for 0D, 42 for map)
     warn:
         Print out any warnings (always warn for 1D, default no for higher dim data)
     emd_int:
@@ -59,6 +60,9 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     l_emd:
         Remove sqrt factor in constraint matrix, provides better solutions with EMD (and if higher T issues?) 
         (default False, but True with emd_int=True)
+    non_pos:
+        Return the first solution irrespective of it being positive or not (default False). 
+        Done by setting max_iter=1, so user max_iter value ignored
     
 
     --------------------
@@ -136,7 +140,12 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
             dem0=np.zeros([nx,ny,nt])
             dem0[:,:,:]=dem_norm0
         if (nmu <= 40):
-            nmu=42      
+            nmu=42  
+
+    # If want to ignore positivity constraint then set max_iter=1 and no need for the warnings
+    if non_pos:
+        max_iter=1
+        warn=False    
 
     # If rgt_fact <=1 then the positivity loop wont work so warn about it
     if (warn and (rgt_fact <= 1)):

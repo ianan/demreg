@@ -284,8 +284,8 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             ndem=len(dem_reg_out[dem_reg_out < 0])
             rgt=rgt_fact*rgt
             piter+=1
-
-        if ((warn) and (piter == max_iter)):
+        
+        if (warn and (piter == max_iter)):
             print('Warning, positivity loop hit max iterations, so increase max_iter? Or rgt_fact too small?')
       
         dem=dem_reg_out
