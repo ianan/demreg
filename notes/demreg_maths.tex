@@ -54,20 +54,22 @@ More details see \citet{2012A&A...539A.146H,2013A&A...553A..10H,2004SoPh..225..2
 \vspace{-10pt}
 \subsection*{Regularization to solve DEM problem}
 
-The observed data $g$ per channel/filter $i$ is related to the underlying differential emission measure DEM $\xi(T_j)=n^2 dh/dT$ [cm$^{-5}$ K$^{-1}$] and the temperature response $K_{ij}$ as:
+The observed data $g_i$ per channel/filter $i$ is related to the underlying differential emission measure DEM $\xi(T_j)=n^2 dh/dT$ [cm$^{-5}$ K$^{-1}$] and the temperature response $K_{ij}$ as:
 \begin{equation}\label{eqn:org}
     g_i=\int K_{ij}\;\xi(T_j)\; dT.
 \end{equation}
 
-This can also be written as a series of linear equations:
+This can also be written as a series of linear equations 
 \begin{equation}\label{eqn:le}
-    g_i=K_{ij}\xi_j
+    g_i=K_{ij}\xi_j\;,
 \end{equation}
-where we have $i=1,...,M$ and $j=1,...,N$ and typically $M<N$ (i.e. have 6 SDO/AIA channels and if we wanted to recover a DEM with 30 temperature bins, so $M=6$ and $N=30$). To solve this problem and recover the DEM really trying to find a minimum to the following:
+where we have $i=1,...,M$ and $j=1,...,N$ and typically $M<N$ (i.e. have 6 SDO/AIA channels and if we wanted to recover a DEM with 30 temperature bins, so $M=6$ and $N=30$). To solve this and recover the DEM we are really trying to find a minimum to the following problem
 \begin{equation}\label{eqn:lsq}
-    \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2=\mbox{min}
+    \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2=\mbox{min},
 \end{equation}
-This is an ill-posed inversion problem and so the addition of linear constraints can be used to recover a solution without the amplification of noise, and a zero-order regularization is often used which selects the smallest norm solution out of the infinitely many possible solutions. So instead of solving Eqn~\ref{eqn:lsq} we actually want to solve:
+with $\|\bf{x}\|^2=\bf{x}^T\bf{x}=\Sigma_{i=1}^{M} \bf{x}_i^2$ which is the L2 (or Euclidean) norm. 
+
+Eqn~\ref{eqn:org} is an ill-posed inversion problem and so the addition of linear constraints can be used to recover a solution without the amplification of noise, and a zero-order regularization is often used which selects the smallest norm solution out of the infinitely many possible solutions. So instead of solving Eqn~\ref{eqn:lsq} we actually want to solve:
 
 \begin{equation}
     \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2  =  \mathrm{min}  \;
@@ -90,7 +92,7 @@ ${\bf u}_k, {\bf v}_k, {\bf w}_k$, with $k=1,...,N$ which satisfy $\alpha_k^2 +
 \beta_k^2=1$, ${\bf U^T {K}W}=\mathrm{diag}(\boldsymbol{\alpha})$ and ${\bf V^T
 LW}=\mathrm{diag}(\boldsymbol{\beta})$. Note that because in our case $M \leq N$, only the first $M$ elements of ${\bf u_k}$ and $\alpha_k$ are non-zero. 
 
-The solution is then, as given in \citet{1992InvPr...8..849H} Eqn 18
+The solution is then, as given in Eqn 18 of \citet{1992InvPr...8..849H} 
 \begin{equation}\label{eqn:sol}
 \boldsymbol{\xi}_\lambda =\sum_{k=1}^ M\left(f_k\frac{{\bf g}\cdot {\bf u}_k}{\alpha_k}
  +(1-f_k) {\bf w}_k^{-1}\boldsymbol{\xi}_0 \right) {\bf w}_k,
@@ -132,7 +134,7 @@ Now to get a useful solution we need to choose a suitable ${\bf L}$ and $\lambda
 \vspace{-10pt}
 \subsection*{Choosing constraint matrix ${\bf L}$}
 
-Generally we are considering zero order regularization, which means that ${\bf L} \propto {\bf I}$ and so should have no non-diagonal terms. In practice, the diagonal terms of ${\bf L}$ are usually normalised by some values, typically either the temperature bin width or where appropriate, some expected form of the final solution (this is not the same as the guess solution $\boldsymbol{\xi}_0$). For instance the minimum of the EM loci curves $\boldsymbol{\xi}_{mlc}$, taken as a smoothed and normalised version of the lowest of all the emission measures found at each temperature assuming an isothermal solution (i.e. for each temperature $T_j$ that is the minimum of $g_i/K_{ij}$ for all $i$).
+Generally we are considering zero order regularization, which means that ${\bf L} \propto {\bf I}$ and so should have no non-diagonal terms. When setting the diagonal terms of ${\bf L}$ they are usually normalised by some values, typically either the temperature bin width (i.e. ${\bf L}_{jj}=1/d \log T_j$) or, where appropriate, some expected form of the final solution (this is not the same as the guess solution $\boldsymbol{\xi}_0$). For instance the minimum of the EM loci curves $\boldsymbol{\xi}_{mlc}$, taken as a smoothed and normalised version of the lowest of all the emission measures found at each temperature assuming an isothermal solution (i.e. ${\bf L}_{jj}$ is the minimum of $g_i/K_{ij}$ over all $i$).
 
 
 \vspace{-10pt}
@@ -172,7 +174,11 @@ Using Eqn~\ref{eqn:desc} should provide the optimal mathematical solution but no
 
 \subsection*{Errors on the DEM solution}
 
-To be added, see \citet{2012A&A...539A.146H,2013A&A...553A..10H} and the code in the meantime.
+More details to come, see \citet{2012A&A...539A.146H,2013A&A...553A..10H} and the code in the meantime.
+
+The vertical errors on the DEM solution are just the linear propagation of the uncertainties on the input data.
+
+The horizontal error on the DEM solution are the ``temperature resolution'' and found from measuring the spread of non-diagional terms in ${\bf K R_\lambda}$, since the better the solution $\boldsymbol{\xi}_\lambda = {\bf R}_\lambda {\bf g}$ then the more ${\bf K R_\lambda} \approx {\bf I}$.
 
 % \newpage
 \par\noindent\rule{0.5\textwidth}{0.4pt}
