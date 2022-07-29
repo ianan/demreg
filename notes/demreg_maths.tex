@@ -140,21 +140,32 @@ Generally we are considering zero order regularization, which means that ${\bf L
 \vspace{-10pt}
 \subsection*{Choosing regularization parameter $\lambda$}
 
-The regularization parameter $\lambda$ can be found based on the $\boldsymbol{\xi}_\lambda$ in Eqn~\ref{eqn:sol}, that matches some additional conditions. The standard one is from Morozov's discrepancy principle, namely
-\begin{equation}
-    \frac{1}{M}\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho
-\end{equation}
-where $\rho$ is the regularization tweak parameter, which is effectively controlling the $\chi^2$ of the solution in data space. So by default are aiming for $\rho=1$. Given that the real observations have an associated uncertainty $\delta g_i$ then we could expect that the best value of $\lambda$ is such that 
-\begin{equation}
-    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho \left\| {\bf \delta g}\right\|^2 .
-\end{equation}
-
-So the optimal $\lambda$ should satisfy 
+The regularization parameter $\lambda$ can be found based on the $\boldsymbol{\xi}_\lambda$ in Eqn~\ref{eqn:sol}, that matches some additional conditions. The standard one is from Morozov's discrepancy principle, in which it is effectively controlling the $\chi^2$ of the solution in data space. Given that the real observations have an associated uncertainty $\delta g_i$ then we could expect that the best value of $\lambda$ is the one that gives the solution $\boldsymbol{\xi}_\lambda$ such that 
 \begin{equation}\label{eqn:desc}
-    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  -  \rho \left\| {\bf \delta g}\right\|^2 = \mathrm{min}.
+    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  -  \rho \left\| {\bf \delta g}\right\|^2 = \mathrm{min}\;,
 \end{equation}
 
-From \citet{1992InvPr...8..849H} Eqn 20, the term $\left\|\bf{K\boldsymbol{\xi}-g}\right\|^2$ can be directly calculated from the GSVD products, namely
+where $\rho$ is the regularization tweak parameter and by default are aiming for $\rho=1$.
+
+
+
+%\begin{equation}
+%    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho \left\| {\bf \delta g}\right\|^2\;,
+%\end{equation}
+%
+%
+%
+%
+%\begin{equation}
+%    \frac{1}{M}\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  =  \rho
+%\end{equation}
+%where $\rho$ is the regularization tweak parameter, which is effectively controlling the $\chi^2$ of the solution in data space. So by default are aiming for $\rho=1$. 
+%So the optimal $\lambda$ should satisfy 
+%\begin{equation}\label{eqn:desc}
+%    \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2  -  \rho \left\| {\bf \delta g}\right\|^2 = \mathrm{min}.
+%\end{equation}
+
+From \citet{1992InvPr...8..849H} Eqn 20, the term $\left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2$ can be directly calculated from the GSVD products, namely
 \begin{equation}\label{eqn:sol2}
 \left\|\bf{K\boldsymbol{\xi}_\lambda-g}\right\|^2=\sum_{k=1}^ M (1-f_k)^2\left(
 {\bf g}\cdot {\bf u}_k - \alpha_k{\bf w}_k^{-1}\boldsymbol{\xi}_0
