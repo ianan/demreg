@@ -1,7 +1,7 @@
 ## DEMReg
 Calculate the Differential Emission Measure (DEM) from solar data using regularized inversion in SSWIDL.
 
-For notes on the maths behind what the code is doing see [notes](https://github.com/ianan/demreg/tree/master/notes).
+For notes on the maths behind what the code is doing see [pdf in notes/](https://github.com/ianan/demreg/blob/master/notes/demreg_maths.pdf).
 
 ---
 
