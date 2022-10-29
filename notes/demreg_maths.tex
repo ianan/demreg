@@ -34,7 +34,7 @@
 % Changing fonts in overleaf
 % see https://www.overleaf.com/learn/latex/font_typefaces
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+% \usepackage[utf8]{inputenc}
 \usepackage{charter}
 % \usepackage{tgtermes}
 \usepackage{parskip}
@@ -63,7 +63,9 @@ This can also be written as a series of linear equations
 \begin{equation}\label{eqn:le}
     g_i=K_{ij}\xi_j\;,
 \end{equation}
-where we have $i=1,...,M$ and $j=1,...,N$ and typically $M<N$ (i.e. have 6 SDO/AIA channels and if we wanted to recover a DEM with 30 temperature bins, so $M=6$ and $N=30$). To solve this and recover the DEM we are really trying to find a minimum to the following problem
+where we have $i=1,...,M$ and $j=1,...,N$ and typically $M<N$ (i.e. have 6 SDO/AIA channels and if we wanted to recover a DEM with 30 temperature bins, so $M=6$ and $N=30$). 
+
+To solve Eqn~\ref{eqn:org} and recover the DEM we are really trying to find a minimum to the following problem
 \begin{equation}\label{eqn:lsq}
     \left\|\bf{K\boldsymbol{\xi}-g}\right\|^2=\mbox{min},
 \end{equation}
@@ -191,17 +193,30 @@ The vertical errors on the DEM solution are just the linear propagation of the u
 
 The horizontal error on the DEM solution are the ``temperature resolution'' and found from measuring the spread of non-diagional terms in ${\bf K R_\lambda}$, since the better the solution $\boldsymbol{\xi}_\lambda = {\bf R}_\lambda {\bf g}$ then the more ${\bf K R_\lambda} \approx {\bf I}$.
 
-% \newpage
+\subsection*{Temperature response functions}
+
+Note that the temperature response functions are found via
+\begin{equation}
+    K_i(T_j)=\int_0^\infty G(\lambda,T_j)\; R_i(\lambda)\; d\lambda
+\end{equation}
+where $G(\lambda,T)$ is the emissivity of the plasma in the solar atmosphere (or contribution function) produced by some appropriate solar model (such as from the CHIANTI database) and $R_i(\lambda)$ is the wavelength response of the $i^{th}$ channel. These temperature response functions are usually pre-calculated and provided by the instrument teams - for instance SDO/AIA \citep{2014SoPh..289.2377B} - but with calibrated EUV spectral line data the contribution functions $G_i(T_j)$ are instead directly used and can be calculated via CHIANTI's gofnt\footnote{i.e.  \href{https://hesperia.gsfc.nasa.gov/ssw/packages/chianti/idl/emiss/gofnt.pro}{ssw version gofnt.pro}} function.
+
+\newpage
 \par\noindent\rule{0.5\textwidth}{0.4pt}
 
-% \bibliographystyle{aasjournal}
-% \bibliography{refs.bib}	
+%\bibliographystyle{aasjournal}
+%\bibliography{refs.bib}	
 \begin{thebibliography}{}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \providecommand{\url}[1]{\href{#1}{#1}}
 \providecommand{\dodoi}[1]{doi:~\href{http://doi.org/#1}{\nolinkurl{#1}}}
 \providecommand{\doeprint}[1]{\href{http://ascl.net/#1}{\nolinkurl{http://ascl.net/#1}}}
 \providecommand{\doarXiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{https://arxiv.org/abs/#1}}}
+
+\bibitem[{{Boerner} {et~al.}(2014){Boerner}, {Testa}, {Warren}, {Weber}, \&
+  {Schrijver}}]{2014SoPh..289.2377B}
+{Boerner}, P.~F., {Testa}, P., {Warren}, H., {Weber}, M.~A., \& {Schrijver},
+  C.~J. 2014, \solphys, 289, 2377, \dodoi{10.1007/s11207-013-0452-z}
 
 \bibitem[{{Hannah} \& {Kontar}(2012)}]{2012A&A...539A.146H}
 {Hannah}, I.~G., \& {Kontar}, E.~P. 2012, \aap, 539, A146,
@@ -220,5 +235,6 @@ The horizontal error on the DEM solution are the ``temperature resolution'' and 
   J.~C. 2004, \solphys, 225, 293, \dodoi{10.1007/s11207-004-4140-x}
 
 \end{thebibliography}
+
 
 \end{document}
