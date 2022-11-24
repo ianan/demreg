@@ -5,6 +5,7 @@ This is a python version of the "mapping" DEMReg code which you can find in this
 This repo contains main python code needed and some nice jupyter notebook examples:
 * [example_demregpy_aiasyn.ipynb](https://github.com/ianan/demreg/blob/master/python/example_demregpy_aiasyn.ipynb) Example notebook recovering the DEM from synthetic AIA data
 * [example_demregpy_aiapxl.ipynb](https://github.com/ianan/demreg/blob/master/python/example_demregpy_aiapxl.ipynb) Example notebook recovering the DEM from real AIA data, including how to prep it via aiapy
+* [ex_demregpy_regionerr.ipynb](https://github.com/ianan/demreg/blob/master/python/ex_demregpy_regionerr.ipynb) Example notebook using synthetic data and plotting final DEMs as error regions instead of errobars
 * [dn2dem_pos.py](https://github.com/ianan/demreg/blob/master/python/dn2dem_pos.py) Wrapper to use data (single set or map) with demmap_pos.py
 * [demmap_pos.py](https://github.com/ianan/demreg/blob/master/python/demmap_pos.py) Main DEMReg code (input is spatial 1D of data)
 
