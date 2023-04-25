@@ -1,5 +1,7 @@
 ## DEMReg python
 
+***Note:*** This code will work with **any** optically thin data as long as you provide suitable temperature repsonse functions (i.e. in units of data units/DEM units). This also means you can combine different data together as long as you provide the responses and data with consistent units per channel/instrument.
+
 This is a python version of the "mapping" DEMReg code which you can find in this repo in [../idl/](../idl/). 
 
 This repo contains main python code needed and some nice jupyter notebook examples:
