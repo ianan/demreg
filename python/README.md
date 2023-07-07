@@ -2,6 +2,8 @@
 
 ***Note:*** This code will work with **any** optically thin data as long as you provide suitable temperature repsonse functions (i.e. in units of data units/DEM units). This also means you can combine different data together as long as you provide the responses and data with consistent units per channel/instrument.
 
+***Note:*** For this code to work you should probably have [sunpy](https://sunpy.org) installed, as it provides useful tools for solar data. Possibly also [aiapy](https://aiapy.readthedocs.io/en/stable/) and [xrtpy](https://xrtpy.readthedocs.io/en/stable/) if working with that data and want the latest temperature response functions. demregpy itself is not solar specific, only using standard python packages like numpy, tqdm, threadpoolctl etc so your python enviroment should have these installed. If one is missing just install via `pip install threadpoolctl` for instance or try installing dempregpy [via the python package version](https://pypi.org/project/demregpy/) as that should install the missing packages for you. 
+
 This is a python version of the "mapping" DEMReg code which you can find in this repo in [../idl/](../idl/). 
 
 This repo contains main python code needed and some nice jupyter notebook examples:
