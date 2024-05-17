@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 from tqdm import tqdm
 from threadpoolctl import threadpool_limits
 
-def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None,nmu=42,warn=False,l_emd=False):
+def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None,nmu=42,warn=False,l_emd=False,rscl=False):
     """
     demmap_pos
     computes the dems for a 1 d array of length na with nf filters using the dn (g) counts and the temperature
@@ -117,7 +117,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
             with ProcessPoolExecutor() as exe:
                 futures=[exe.submit(dem_unwrap, dd[i*n_par:(i+1)*n_par,:],ed[i*n_par:(i+1)*n_par,:],rmatrix,logt,dlogt,glc, \
                     reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i*n_par:(i+1)*n_par,:],\
-                        nmu=nmu,warn=warn,l_emd=l_emd) \
+                        nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl) \
                         for i in np.arange(niter)]
                 kwargs = {
                     'total': len(futures),
@@ -140,7 +140,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
                 for i in range(na-i_start):
                     result=dem_pix(dd[i_start+i,:],ed[i_start+i,:],rmatrix,logt,dlogt,glc, \
                         reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i_start+i,:],\
-                            nmu=nmu,warn=warn,l_emd=l_emd)
+                            nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
                     dem[i_start+i,:]=result[0]
                     edem[i_start+i,:]=result[1]
                     elogt[i_start+i,:]=result[2]
@@ -151,7 +151,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     else:   
         for i in range(na):
             result=dem_pix(dd[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \
-                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn,l_emd=l_emd)
+                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
             dem[i,:]=result[0]
             edem[i,:]=result[1]
             elogt[i,:]=result[2]
@@ -160,7 +160,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
 
     return dem,edem,elogt,chisq,dn_reg
 
-def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=False,l_emd=False):
+def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=False,l_emd=False,rscl=False):
     #this nasty function serialises the parallel blocks
     ndem=dn.shape[0]
     nt=logt.shape[0]
@@ -172,7 +172,7 @@ def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg=np.zeros([ndem,nf])
     for i in range(ndem):
         result=dem_pix(dn[i,:],ed[i,:],rmatrix,logt,dlogt,glc, \
-                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn,l_emd=l_emd)
+                reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i,:],nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
         dem[i,:]=result[0]
         edem[i,:]=result[1]
         elogt[i,:]=result[2]
@@ -180,7 +180,7 @@ def dem_unwrap(dn,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         dn_reg[i,:]=result[4]
     return dem,edem,elogt,chisq,dn_reg
 
-def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=True,l_emd=False):
+def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=0,nmu=42,warn=True,l_emd=False,rscl=False):
     
     nf=rmatrix.shape[1]
     nt=logt.shape[0]
@@ -200,6 +200,7 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
         rmatrixin[:,kk]=rmatrix[:,kk]/ednin[kk]
     dn=dnin/ednin
     edn=ednin/ednin
+
     # checking for Inf and NaN
     if ( sum(np.isnan(dn)) == 0 and sum(np.isinf(dn)) == 0 and np.prod(dn) > 0):
         ndem=1
@@ -309,4 +310,11 @@ def dem_pix(dnin,ednin,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact
             elogt[kk]=dlogt[kk]
             if (np.sum(hm_mask) > 0):
                 elogt[kk]=(ltt[hm_mask][-1]-ltt[hm_mask][0])/2
+
+        if rscl:
+            mnrat=np.mean(dnin/dn_reg)
+            dem=dem*mnrat
+            edem=edem*mnrat
+            dn_reg=(rmatrix.T @ dem).squeeze()
+            chisq=np.sum(((dnin-dn_reg)/ednin)**2)/nf
     return dem,edem,elogt,chisq,dn_reg

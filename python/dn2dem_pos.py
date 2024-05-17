@@ -2,7 +2,7 @@ import numpy as np
 from demmap_pos import demmap_pos
 
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,\
-    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False,non_pos=False):
+    rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False,non_pos=False,rscl=False):
     """
     Performs a Regularization on solar data, returning the Differential Emission Measure (DEM)
     using the method of Hannah & Kontar A&A 553 2013
@@ -215,11 +215,11 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     if ( dem0.ndim==dn.ndim ):
         dem01d=np.reshape(dem0,[nx*ny,nt])
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,\
-            reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem01d,nmu=nmu,warn=warn,l_emd=l_emd)
+            reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem01d,nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
     else:
         dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,\
             dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
-                rgt_fact=rgt_fact,dem_norm0=0,nmu=nmu,warn=warn,l_emd=l_emd)
+                rgt_fact=rgt_fact,dem_norm0=0,nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
     #reshape the 1d arrays to original dimensions and squeeze extra dimensions
     dem=((np.reshape(dem1d,[nx,ny,nt]))*sclf).squeeze()
     edem=((np.reshape(edem1d,[nx,ny,nt]))*sclf).squeeze()
