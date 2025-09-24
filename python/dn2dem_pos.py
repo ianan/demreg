@@ -1,6 +1,9 @@
 import numpy as np
 from demmap_pos import demmap_pos
 
+# Now working with numpy v2+, as per
+# https://github.com/alasdairwilson/demregpy/blob/main/demregpy/dn2dem.py
+
 def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,gloci=0,\
     rgt_fact=1.5,dem_norm0=None,nmu=40,warn=False,emd_int=False,emd_ret=False,l_emd=False,non_pos=False,rscl=False):
     """
@@ -83,157 +86,160 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     
  
     """
-    #create our bin averages:
-    logt=([np.mean([(np.log10(temps[i])),np.log10((temps[i+1]))]) for i in np.arange(0,len(temps)-1)])
-    #and widths
-    dlogt=(np.log10(temps[1:])-np.log10(temps[:-1]))
-    nt=len(dlogt)
-    logt=(np.array([np.log10(temps[0])+(dlogt[i]*(float(i)+0.5)) for i in np.arange(nt)]))
-    #number of DEM entries
-    
-    #hopefully we can deal with a variety of data, nx,ny,nf
-    sze=dn_in.shape
 
-    #for a single pixel
-    if (np.any(dem_norm0)==None):
-#         If no dem0 wght given just set them all to 1
-        dem_norm0=np.ones(np.hstack((dn_in.shape[0:-1],nt)).astype(int))
-    if len(sze)==1:
-        nx=1
-        ny=1
-        nf=sze[0]
-        dn=np.zeros([1,1,nf])
-        dn[0,0,:]=dn_in
-        edn=np.zeros([1,1,nf])
-        edn[0,0,:]=edn_in
-        if (np.all(dem_norm0) != None):
-            dem0=np.zeros([1,1,nt])
-            dem0[0,0,:]=dem_norm0
-        if (warn == False):
-            warn=True
-        if (nmu <= 40):
-            nmu=500
-    #for a row of pixels
-    if len(sze)==2:
-        nx=sze[0]
-        ny=1
-        nf=sze[1]
-        dn=np.zeros([nx,1,nf])
-        dn[:,0,:]=dn_in
-        edn=np.zeros([nx,1,nf])
-        edn[:,0,:]=edn_in
-        if (np.all(dem_norm0) != None):
-            dem0=np.zeros([nx,1,nt])
-            dem0[:,0,:]=dem_norm0
-        if (nmu <= 40):
-            nmu=42
-    #for 2d image
-    if len(sze)==3:
-        nx=sze[0]
-        ny=sze[1]
-        nf=sze[2]
-        dn=np.zeros([nx,ny,nf])
-        dn[:,:,:]=dn_in
-        edn=np.zeros([nx,ny,nf])
-        edn[:,:,:]=edn_in
-        if (np.all(dem_norm0) != None):
-            dem0=np.zeros([nx,ny,nt])
-            dem0[:,:,:]=dem_norm0
-        if (nmu <= 40):
-            nmu=42  
+    # create our bin averages:
+    logt = ([np.mean([(np.log10(temps[i])), np.log10(temps[i+1])]) for i in np.arange(0, len(temps)-1)])
+    # and widths
+    dlogt = (np.log10(temps[1:])-np.log10(temps[:-1]))
+    nt = len(dlogt)
+    logt = (np.array([np.log10(temps[0])+(dlogt[i]*(float(i)+0.5)) for i in np.arange(nt)]))
+    # number of DEM entries
 
+    # hopefully we can deal with a variety of data, nx,ny,nf
+    sze = dn_in.shape
+
+    # for a single pixel
+    if dem_norm0 is None or np.all(~np.isfinite(dem_norm0)) or np.all(dem_norm0 == 0):
+        dem_norm0 = np.ones(np.hstack((dn_in.shape[0:-1], nt)).astype(int))
+    # for a single pixel
+    if len(sze) == 1:
+        nx = 1
+        ny = 1
+        nf = sze[0]
+        dn = np.zeros([1, 1, nf])
+        dn[0, 0, :] = dn_in
+        edn = np.zeros([1, 1, nf])
+        edn[0, 0, :] = edn_in
+        if dem_norm0 is not None and np.isfinite(dem_norm0).all():
+            dem0 = np.zeros([1, 1, nt])
+            dem0[0, 0, :] = dem_norm0
+        if warn is False:
+            warn = True
+        if nmu <= 40:
+            nmu = 500
+
+    # for a row of pixels
+    if len(sze) == 2:
+        nx = sze[0]
+        ny = 1
+        nf = sze[1]
+        dn = np.zeros([nx, 1, nf])
+        dn[:, 0, :] = dn_in
+        edn = np.zeros([nx, 1, nf])
+        edn[:, 0, :] = edn_in
+        if dem_norm0 is not None and np.isfinite(dem_norm0).all():
+            dem0 = np.zeros([nx, 1, nt])
+            dem0[:, 0, :] = dem_norm0
+        if nmu <= 40:
+            nmu = 42
+
+    # for 2d image
+    if len(sze) == 3:
+        nx = sze[0]
+        ny = sze[1]
+        nf = sze[2]
+        dn = np.zeros([nx, ny, nf])
+        dn[:, :, :] = dn_in
+        edn = np.zeros([nx, ny, nf])
+        edn[:, :, :] = edn_in
+        if dem_norm0 is not None and np.isfinite(dem_norm0).all():
+            dem0 = np.zeros([nx, ny, nt])
+            dem0[:, :, :] = dem_norm0
+        if nmu <= 40:
+            nmu = 42
     # If want to ignore positivity constraint then set max_iter=1 and no need for the warnings
     if non_pos:
-        max_iter=1
-        warn=False    
+        max_iter = 1
+        warn = False
 
-    # If rgt_fact <=1 then the positivity loop wont work so warn about it
+    # If rgt_fact <=1 then the positivity loop won't work so warn about it
     if (warn and (rgt_fact <= 1)):
         print('Warning, rgt_fact should be > 1, for postivity loop to iterate properly.')
-    
+
     # Set glc to either none or all, based on gloci input (default none/not using)
-# IDL version of code allows selective use of gloci, i.e [1,1,0,0,1,1] to chose 4 of 6 filters for EM loci
-# dem_pix() in demmap_pos.py does allow this, but not sure will work through these wrapper functions
-# also not sure if this functionality is actually needed, just stick with all filter or none?
+    # IDL version of code allows selective use of gloci, i.e [1,1,0,0,1,1] to chose 4 of 6 filters for EM loci
+    # dem_pix() in demmap_pos.py does allow this, but not sure will work through these wrapper functions
+    # also not sure if this functionality is actually needed, just stick with all filter or none?
     if gloci == 1:
-        glc=np.ones(nf)
+        glc = np.ones(nf)
         glc.astype(int)
     else:
-        glc=np.zeros(nf)
-        glc.astype(int)      
-        
-    if len(tresp[0,:])!=nf:
+        glc = np.zeros(nf)
+        glc.astype(int)
+
+    if len(tresp[0, :]) != nf:
         print('Tresp needs to be the same number of wavelengths/filters as the data.')
-    
-    truse=np.zeros([tresp[:,0].shape[0],nf])
-    #check the tresp has no elements <0
-    #replace any it finds with the mimimum tresp from the same filter
-    for i in np.arange(0,nf):
-        #keep good TR data
-        truse[tresp[:,i] > 0]=tresp[tresp[:,i] > 0]
-        #set bad data to the minimum
-        truse[tresp[:,i] <= 0,i]=np.min(tresp[tresp[:,i] > 0],axis=0)[i]
 
-    tr=np.zeros([nt,nf])
+    truse = np.zeros([tresp[:, 0].shape[0], nf])
+    # check the tresp has no elements <0
+    # replace any it finds with the minimum tresp from the same filter
+    for i in np.arange(0, nf):
+        # keep good TR data
+        truse[tresp[:, i] > 0] = tresp[tresp[:, i] > 0]
+        # set bad data to the minimum
+        truse[tresp[:, i] <= 0, i] = np.min(tresp[tresp[:, i] > 0], axis=0)[i]
+
+    tr = np.zeros([nt, nf])
     for i in np.arange(nf):
-#       Ideally should be interp in log-space, so changed
-# Not as big an issue for purely AIA filters, but more of an issue for steeper X-ray ones
-        tr[:,i]=10**np.interp(logt,tresp_logt,np.log10(truse[:,i]))
-#     Previous version
-#         tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
+        #       Ideally should be interp in log-space, so changed
+        # Not as big an issue for purely AIA filters, but more of an issue for steeper X-ray ones
+        tr[:, i] = 10**np.interp(logt, tresp_logt, np.log10(truse[:, i]))
+    #     Previous version
+    #         tr[:,i]=np.interp(logt,tresp_logt,truse[:,i])
 
-    rmatrix=np.zeros([nt,nf])
-    #Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
-    dlogTfac=10.0**logt*np.log(10.0**dlogt)
-    # Do regularization of EMD or DEM 
+    rmatrix = np.zeros([nt, nf])
+    # Put in the 1/K factor (remember doing it in logT not T hence the extra terms)
+    dlogTfac = 10.0**logt*np.log(10.0**dlogt)
+    # Do regularization of EMD or DEM
     if emd_int:
-        l_emd=True
+        l_emd = True
         for i in np.arange(nf):
-            rmatrix[:,i]=tr[:,i]
+            rmatrix[:, i] = tr[:, i]
     else:
         for i in np.arange(nf):
-            rmatrix[:,i]=tr[:,i]*dlogTfac
-    #Just scale so not dealing with tiny numbers
-    sclf=1E15
-    rmatrix=rmatrix*sclf
+            rmatrix[:, i] = tr[:, i]*dlogTfac
+    # Just scale so not dealing with tiny numbers
+    sclf = 1E15
+    rmatrix = rmatrix*sclf
 
-    dn1d=np.reshape(dn,[nx*ny,nf])
-    edn1d=np.reshape(edn,[nx*ny,nf])
-#create our 1d arrays for output
-    dem1d=np.zeros([nx*ny,nt])
-    chisq1d=np.zeros([nx*ny])
-    edem1d=np.zeros([nx*ny,nt])
-    elogt1d=np.zeros([nx*ny,nt])
-    dn_reg1d=np.zeros([nx*ny,nf])
+    dn1d = np.reshape(dn, [nx*ny, nf])
+    edn1d = np.reshape(edn, [nx*ny, nf])
+    # create our 1d arrays for output
+    dem1d = np.zeros([nx*ny, nt])
+    chisq1d = np.zeros([nx*ny])
+    edem1d = np.zeros([nx*ny, nt])
+    elogt1d = np.zeros([nx*ny, nt])
+    dn_reg1d = np.zeros([nx*ny, nf])
 
-
-# *****************************************************
-#  Actually doing the DEM calculations
-# *****************************************************
-# Should always be just running the first part of if here as setting dem01d to array of 1s if nothing given
-# So now more a check dimensions of things are correct 
-    if ( dem0.ndim==dn.ndim ):
-        dem01d=np.reshape(dem0,[nx*ny,nt])
-        dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,dlogt,glc,\
-            reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem01d,nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
+    # *****************************************************
+    #  Actually doing the DEM calculations
+    # *****************************************************
+    # Should always be just running the first part of if here as setting dem01d to array of 1s if nothing given
+    # So now more a check dimensions of things are correct
+    if (dem0.ndim == dn.ndim):
+        dem01d = np.reshape(dem0, [nx*ny, nt])
+        dem1d, edem1d, elogt1d, chisq1d, dn_reg1d = \
+            demmap_pos(dn1d, edn1d, rmatrix, logt, dlogt, glc,
+                   reg_tweak=reg_tweak, max_iter=max_iter,
+                   rgt_fact=rgt_fact, dem_norm0=dem01d, nmu=nmu, warn=warn, l_emd=l_emd)
     else:
-        dem1d,edem1d,elogt1d,chisq1d,dn_reg1d=demmap_pos(dn1d,edn1d,rmatrix,logt,\
-            dlogt,glc,reg_tweak=reg_tweak,max_iter=max_iter,\
-                rgt_fact=rgt_fact,dem_norm0=0,nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl)
-    #reshape the 1d arrays to original dimensions and squeeze extra dimensions
-    dem=((np.reshape(dem1d,[nx,ny,nt]))*sclf).squeeze()
-    edem=((np.reshape(edem1d,[nx,ny,nt]))*sclf).squeeze()
-    elogt=(np.reshape(elogt1d,[ny,nx,nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
-    chisq=(np.reshape(chisq1d,[nx,ny])).squeeze()
-    dn_reg=(np.reshape(dn_reg1d,[nx,ny,nf])).squeeze()
+        dem1d, edem1d, elogt1d, chisq1d, dn_reg1d = \
+            demmap_pos(dn1d, edn1d, rmatrix, logt,
+                   dlogt, glc, reg_tweak=reg_tweak, max_iter=max_iter,
+                   rgt_fact=rgt_fact, dem_norm0=0, nmu=nmu, warn=warn, l_emd=l_emd)
+    # reshape the 1d arrays to original dimensions and squeeze extra dimensions
+    dem = ((np.reshape(dem1d, [nx, ny, nt]))*sclf).squeeze()
+    edem = ((np.reshape(edem1d, [nx, ny, nt]))*sclf).squeeze()
+    elogt = (np.reshape(elogt1d, [ny, nx, nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
+    chisq = (np.reshape(chisq1d, [nx, ny])).squeeze()
+    dn_reg = (np.reshape(dn_reg1d, [nx, ny, nf])).squeeze()
 
     # There's probably a neater way of doing this (and maybe provide info of what was done as well?)
     # but fine for now as it works
     if emd_int and emd_ret:
-        return dem,edem,elogt,chisq,dn_reg
+        return dem, edem, elogt, chisq, dn_reg
     if emd_int and not emd_ret:
-        return dem/dlogTfac,edem/dlogTfac,elogt,chisq,dn_reg
+        return dem/dlogTfac, edem/dlogTfac, elogt, chisq, dn_reg
     if not emd_int and emd_ret:
-        return dem*dlogTfac,edem*dlogTfac,elogt,chisq,dn_reg
-    if not emd_int and not emd_ret:
-        return dem,edem,elogt,chisq,dn_reg
+        return dem*dlogTfac, edem*dlogTfac, elogt, chisq, dn_reg
+    return dem, edem, elogt, chisq, dn_reg
