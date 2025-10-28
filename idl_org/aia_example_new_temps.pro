@@ -27,7 +27,7 @@ filt=[0,1,2,3,4,6]
 ; ; default units of DN cm^5/ s/px
 TRmatrix=tresp.all[*,filt]
 ; ; what is the logT binning of the temperature responses
-logt=tresp.logte
+TRlogt=tresp.logte
 
 ; Make a DEM Model of some Gaussian of the following parms
 d1=4d22
@@ -35,9 +35,9 @@ m1=6.5
 s1=0.15
 root2pi=sqrt(2.*!PI)
 ; Gauss DEM model
-dem_mod=(d1/(root2pi*s1))*exp(-(logT-m1)^2/(2*s1^2))
+dem_mod=(d1/(root2pi*s1))*exp(-(TRlogT-m1)^2/(2*s1^2))
 ; Work out the synthetic AIA DN/px/s
-dn_mod=dem2dn(logT, dem_mod, TRmatrix)
+dn_mod=dem2dn(TRlogT, dem_mod, TRmatrix)
 dn_in=dn_mod.dn
 nf=n_elements(dn_in)
 ; workout the error on the data
@@ -61,7 +61,7 @@ guess=0.
 temps=10^(findgen(33)*0.05 +5.7)
 
 ; run the regularization
-reg=data2dem_reg_temps(logT, TRmatrix, dn_in, edn_in,temps,$
+reg=data2dem_reg_temps(TRlogT, TRmatrix, dn_in, edn_in,temps,$
   order=order,reg_tweak=reg_tweak, guess=guess, $
   channels=tresp.channels[filt])
 
