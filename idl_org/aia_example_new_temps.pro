@@ -9,6 +9,7 @@
 ;; 20-05-2019    Minor update: must use the timedepend_date option when getting aia response
 ;; 28-04-2020    Minor tweak to aia_get_response() - added /eve to avoid prompt
 ;; 12-08-2020    Leave degradation correction out of the responses - assume data is corrected (i.e. from t0)
+;; 28-10-2025    Test with newer temps version?
 
 ; Need to make the response functions?
 if (file_test('aia_resp.dat') eq 0) then $
@@ -57,9 +58,10 @@ reg_tweak=1
 ; ;Use guess solution in final regularization? default is no, guess=0.
 guess=0.
 
+temps=10^(findgen(33)*0.05 +5.7)
+
 ; run the regularization
-reg=data2dem_reg(logT, TRmatrix, dn_in, edn_in,$
-  mint=5.7, maxt=7.1, nt=30, $
+reg=data2dem_reg_temps(logT, TRmatrix, dn_in, edn_in,temps,$
   order=order,reg_tweak=reg_tweak, guess=guess, $
   channels=tresp.channels[filt])
 
@@ -113,8 +115,7 @@ window,4,xsize=600,ysize=400,title='Data Contribution per T'
 loadct,0,/silent
 for i=0, nf-1 do plot,reg.logt,reg.data_cont_t[*,i],$
   title=reg.channels[i]+': '+string(reg.data_reg[i]),xtitle=' log!D10!NT [K]',ytitle='DN s!U-1!N px!U-1!N'
-  
+
 print,reg.data
 print,reg.data_reg
-
 
