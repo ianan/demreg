@@ -12,9 +12,9 @@
 ;; 28-10-2025    Test with newer temps version?
 
 ; Need to make the response functions?
-if (file_test('aia_resp.dat') eq 0) then $
-;  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
-  tresp=aia_get_response(/temperature,/dn,/eve) & save,file='aia_resp.dat',tresp
+;if (file_test('aia_resp.dat') eq 0) then $
+;;  tresp=aia_get_response(/temperature,/dn,/eve,timedepend_date='01-Jul-2010') & save,file='aia_resp.dat',tresp
+;  tresp=aia_get_response(/temperature,/dn,/eve) & save,file='aia_resp.dat',tresp
 
 restore,file='aia_resp.dat'
 

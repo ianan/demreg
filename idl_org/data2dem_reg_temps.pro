@@ -90,9 +90,10 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
   if (n_elements(guess) lt 1) then guess=0
   if (n_elements(reg_tweak) lt 1) then reg_tweak=1.
   if (n_elements(temps) lt 6) then temps=[0.5,1,1.5,2,3,4,6,8,11,14,19,25,32]*1e6
-  logT=get_edges(alog10(temps),/mean)
+  ; better to call this mlogT as that is what it is?
+  mlogT=get_edges(alog10(temps),/mean)
   dlogT=get_edges(alog10(temps),/width)
-  nt=n_elements(logT)
+  nt=n_elements(mlogT)
   
   nf=n_elements(data)
   if (n_elements(channels) lt nf) then channels=strarr(nf)
@@ -104,16 +105,18 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
 
   TRmatint=dblarr(nt,nf)
   ;better interpolation if done in log space though need check not -NaN
-  for i=0, nf-1 do TRmatint[*,i]=10d^interpol(alog10(TRmatrix[*,i]), tresp_logT, logT) > 0.
+  for i=0, nf-1 do TRmatint[*,i]=10d^interpol(alog10(TRmatrix[*,i]), tresp_logT, mlogT) > 0.
 
   ;Before we begin can work out the conversion factors for DEM to EM
   ; This is just dT so could do DEMtoEM=temps[1:-1]-temps[0:-2] ?
-  ; and replace this throughout the code below, i.e. just *dT instead of *10d^logT*alog(10d^dlogT)?
-  DEMtoEM=10d^logT*alog(10d^dlogT)
+  ; and replace this throughout the code below, i.e. just *dT instead of *10d^mlogT*alog(10d^dlogT)?
+  DEMtoEM=10d^mlogT*alog(10d^dlogT)
+  
+;  print,(temps[1:-1]-temps[0:-2])/DEMtoEM
 
   ; Now intrepolate the response functions to the temperature binning of DEM output
   RMatrix=dblarr(nT,nF)
-  for i=0, nF-1  do RMatrix[*,i]=TRmatint[*,i]*10d^logT*alog(10d^dlogT)
+  for i=0, nF-1  do RMatrix[*,i]=TRmatint[*,i]*10d^mlogT*alog(10d^dlogT)
   RMatrix=RMatrix*1d20
   RMatrix_org=Rmatrix
   DEM_model =dblarr(nt)
@@ -131,8 +134,8 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
     dd4eml=data
     test_0_data=where(data le 0.,nt0d)
     if (nt0d gt 0) then dd4eml[test_0_data]=1e-6*edata[test_0_data]
-    for ii=0, nf-1 do emloci[*,ii]=dd4eml[ii]/(TRmatint[*,ii]*10d^logT*alog(10d^dlogT))
-    for ii=0, nf-1 do emloci[*,ii]=data[ii]/(TRmatint[*,ii]*10d^logT*alog(10d^dlogT))
+    for ii=0, nf-1 do emloci[*,ii]=dd4eml[ii]/(RMatrix[*,ii])
+    for ii=0, nf-1 do emloci[*,ii]=data[ii]/(RMatrix[*,ii])
     for jj=0, nt-1 do dem_model[jj]=min(emloci[jj,*])
     dem_model=smooth(dem_model,3)*1d-20
   endif else begin
@@ -160,7 +163,7 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
   endelse
 
   ;This time make constraint to specified order
-  dem_inv_make_constraint,L,logT,dlogT,DEM_model,order
+  dem_inv_make_constraint,L,mlogT,dlogT,DEM_model,order
 
   ; GSVD on temperature responses (Rmatrix) and constraint matrix (L)
   dem_inv_gsvdcsq,RMatrix,L,Alpha,Betta,U,V,W
@@ -177,8 +180,8 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
 
     ;********************************************************************************************************
     ; now work out the temperature resolution/horizontal spread
-    dem_inv_reg_resolution,Alpha,Betta,opt,W,logT,dlogT,FWHM,cent,RK,fwhm2
-    dem_inv_reg_resolution,Alpha,Betta,opt_pos,W,logT,dlogT,FWHM_pos,cent_pos,RK_pos,fwhm2_pos
+    dem_inv_reg_resolution,Alpha,Betta,opt,W,mlogT,dlogT,FWHM,cent,RK,fwhm2
+    dem_inv_reg_resolution,Alpha,Betta,opt_pos,W,mlogT,dlogT,FWHM_pos,cent_pos,RK_pos,fwhm2_pos
 
     ; now work out the DEM error (vertical error)
     npass=300.
@@ -222,7 +225,7 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
 
     ;********************************************************************************************************
     ; now work out the temperature resolution/horizontal spread
-    dem_inv_reg_resolution,Alpha,Betta,opt,W,logT,dlogT,FWHM,cent,RK,fwhm2
+    dem_inv_reg_resolution,Alpha,Betta,opt,W,mlogT,dlogT,FWHM,cent,RK,fwhm2
 
     ; now work out the DEM error (vertical error)
     npass=300.
@@ -238,7 +241,7 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$
       DEM:DEM_reg[0:nT-1]*1d20, eDEM:reg_sol_err[0:nT-1]*1d20, $
-      logT:logT,elogT:fwhm/(2.0*sqrt(2*alog(2))),RK:RK,$
+      logT:mlogT,elogT:fwhm/(2.0*sqrt(2*alog(2))),RK:RK,$
       data_reg:data_reg,residuals:residuals,chisq:chisq,data_cont_t:data_cont_t,$
       reg_tweak:reg_tweak,guess:guess,order:order,DEMtoEM:DEMtoEM}
 
