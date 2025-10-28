@@ -107,6 +107,8 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
   for i=0, nf-1 do TRmatint[*,i]=10d^interpol(alog10(TRmatrix[*,i]), tresp_logT, logT) > 0.
 
   ;Before we begin can work out the conversion factors for DEM to EM
+  ; This is just dT so could do DEMtoEM=temps[1:-1]-temps[0:-2] ?
+  ; and replace this throughout the code below, i.e. just *dT instead of *10d^logT*alog(10d^dlogT)?
   DEMtoEM=10d^logT*alog(10d^dlogT)
 
   ; Now intrepolate the response functions to the temperature binning of DEM output
