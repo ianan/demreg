@@ -136,6 +136,8 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
     if (nt0d gt 0) then dd4eml[test_0_data]=1e-6*edata[test_0_data]
     for ii=0, nf-1 do emloci[*,ii]=dd4eml[ii]/(RMatrix[*,ii])
     for ii=0, nf-1 do emloci[*,ii]=data[ii]/(RMatrix[*,ii])
+;    for ii=0, nf-1 do emloci[*,ii]=dd4eml[ii]/(TRmatint[*,ii]*10d^mlogT*alog(10d^dlogT))
+;    for ii=0, nf-1 do emloci[*,ii]=data[ii]/(TRmatint[*,ii]*10d^mlogT*alog(10d^dlogT))
     for jj=0, nt-1 do dem_model[jj]=min(emloci[jj,*])
     dem_model=smooth(dem_model,3)*1d-20
   endif else begin
