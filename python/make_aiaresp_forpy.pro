@@ -67,13 +67,4 @@ pro make_aiaresp_forpy
   tr = tresp.all[*, ids]
   units = tresp.units
   save, file = 'aia_tresp_en_ph.dat', channels, logt, tr, units
-
-  ; Default version
-  tresp = aia_get_response(/temperature, /dn)
-  ids = [0, 1, 2, 3, 4, 6]
-  channels = tresp.channels[ids]
-  logt = tresp.logte
-  tr = tresp.all[*, ids]
-  units = tresp.units
-  save, file = 'aia_tresp.dat', channels, logt, tr, units
 end
