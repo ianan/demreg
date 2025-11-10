@@ -59,12 +59,12 @@ pro make_aiaresp_forpy
   units = tresp.units
   save, file = 'aia_tresp_en_cf.dat', channels, logt, tr, units
 
-  ; Photospheric abundances, default is coronal, not working for v9/v10?
-  tresp = aia_get_response(/temperature, /dn, /eve, /use_photospheric)
-  ids = [0, 1, 2, 3, 4, 6]
-  channels = tresp.channels[ids]
-  logt = tresp.logte
-  tr = tresp.all[*, ids]
-  units = tresp.units
-  save, file = 'aia_tresp_en_ph.dat', channels, logt, tr, units
+  ; Photospheric version not working?
+  ; tresp = aia_get_response(/temperature, /dn, /eve, /use_photo)
+  ; ids = [0, 1, 2, 3, 4, 6]
+  ; channels = tresp.channels[ids]
+  ; logt = tresp.logte
+  ; tr = tresp.all[*, ids]
+  ; units = tresp.units
+  ; save, file = 'aia_tresp_en_ph.dat', channels, logt, tr, units
 end

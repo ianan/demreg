@@ -27,7 +27,7 @@ filt=[0,1,2,3,4,6]
 ; ; default units of DN cm^5/ s/px
 TRmatrix=tresp.all[*,filt]
 ; ; what is the logT binning of the temperature responses
-TRlogt=tresp.logte
+TRlogT=tresp.logte
 
 ; Make a DEM Model of some Gaussian of the following parms
 d1=4d22
@@ -63,33 +63,34 @@ temps=10^(findgen(33)*0.05 +5.7)
 ; run the regularization
 reg=data2dem_reg_temps(TRlogT, TRmatrix, dn_in, edn_in,temps,$
   order=order,reg_tweak=reg_tweak, guess=guess, $
-  channels=tresp.channels[filt])
+  channels=tresp.channels[filt],pos=1)
+
+;reg=data2dem_reg_temps(TRlogT, TRmatrix, dn_in, edn_in,$
+;  order=order,reg_tweak=reg_tweak, guess=guess, $
+;  channels=tresp.channels[filt],pos=1)
+
 
 ; now to plot the results....
 loadct,39,/silent
-!p.charsize=1.5
+!p.charsize=3
+!p.multi=[0,3,1]
 ; plot the regularized DEM and both vertical and horizontal errors
-window,1,xsize=650,ysize=500,title='Regularized DEM'
-!p.multi=0
-;ploterr,reg.logt,reg.dem,reg.elogt,reg.edem,$
-; /nohat,errcolor=150,yrange=max(reg.dem)*[1e-3,1.2],$
-; xrange=[min(reg.logt),max(reg.logt)],xstyle=17,/ylog,$
-; xtitle='log!D10!N T',ytitle='DEM(T) [cm!U-5!N K!U-1!N]'
+window,1,xsize=900,ysize=500,title='Regularized DEM'
 
 plot,reg.logt,reg.dem,yrange=max(reg.dem)*[1e-3,1.2],$
   xrange=[min(reg.logt),max(reg.logt)],xstyle=17,/ylog,$
-  xtitle='log!D10!N T',ytitle='DEM(T) [cm!U-5!N K!U-1!N]'
+  xtitle='log!D10!N T',ytitle='DEM(T) [cm!U-5!N K!U-1!N]',$
+  position=[0.1,0.1,0.55,0.95]
 
 for i=0, n_elements(reg.dem)-1 do oplot,reg.logt[i]+(reg.elogt[i]*[-1,1]),reg.dem[i]*[1,1]
 for i=0, n_elements(reg.dem)-1 do oplot,reg.logt[i]*[1,1],reg.dem[i]+(reg.edem[i]*[-1,1])
 
-window,2,xsize=500,ysize=500,title='DN-space and Residuals'
-!p.multi=[0,1,2]
 nf=n_elements(reg.channels)
 plot,indgen(nf),reg.data,/ylog,psym=6,$
   xrange=[-1,nf],xtickf='(a1)',xticks=nf+1,ystyle=16,thick=3,$
   ytit='DN s!U-1!N',xtit=' ',/nodata,$
-  yrange=[0.9*min(reg.data),1.1*max(reg.data)]
+  yrange=[0.9*min(reg.data),1.1*max(reg.data)],$
+  position=[0.65,0.525,0.98,0.95]
 oplot,indgen(nf),reg.data_reg,psym=6,color=150,thick=1
 ;oplot,indgen(nf),reg.data,psym=7,thick=2
 for i=0, nf-1 do oplot, [i,i],reg.data[i]+(reg.edata[i]*[-1,1]),thick=1
@@ -97,25 +98,11 @@ for i=0, nf-1 do oplot, [i,i],reg.data[i]+(reg.edata[i]*[-1,1]),thick=1
 maxr=1.1*max(abs(reg.residuals))
 plot,indgen(nf),reg.residuals,xrange=[-1,nf],xtickn=[' ',reg.channels,' '],$
   xticks=nf+1,ystyle=17,thick=1,yrange=maxr*[-1,1],psym=6,$
-  ytit='Residuals',xtit='Filter'
+  ytit='Residuals',xtit='Filter',$
+  position=[0.65,0.1,0.98,0.525]
 oplot,[-2,nf],[0,0],lines=1
-xyouts,-0.5,.75*maxr,'chisq='+string(reg.chisq,format='(f4.1)'),/data
+xyouts,-0.5,.75*maxr,'chisq='+string(reg.chisq,format='(f4.1)'),/data,chars=1.5
 
-window,3,xsize=500,ysize=500,title='RK Matrix'
-!p.multi=0
-loadct,8,/silent
-gamma_ct,2.
-rn=reg.rk
-for i=0,n_elements(reg.logt)-1 do rn[i,*]=rn[i,*]/max(rn[i,*])
-image_tv,transpose(rn),reg.logt,reg.logt,ytitle='Temperature Bin'
-oplot,[0,20],[0,20]
-
-window,4,xsize=600,ysize=400,title='Data Contribution per T'
-!p.multi=[0,3,2]
-loadct,0,/silent
-for i=0, nf-1 do plot,reg.logt,reg.data_cont_t[*,i],$
-  title=reg.channels[i]+': '+string(reg.data_reg[i]),xtitle=' log!D10!NT [K]',ytitle='DN s!U-1!N px!U-1!N'
-
-print,reg.data
-print,reg.data_reg
+;print,reg.data
+;print,reg.data_reg
 

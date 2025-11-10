@@ -51,6 +51,7 @@
 ;  26-Sep-2011	This modified version produces an extra positive solution IGH
 ;  28-Apr-2020  Changed any fltarr() to dblarr() IGH
 ;  12-Apr-2022  Commented out un-needed end calc (from testing)
+;  10-Nov-2025  Added opt_pos def to avoid print error if npos=0
 ;-
 
 pro dem_inv_reg_parameter_pos,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt,reg,opt_pos,reg_pos
@@ -91,7 +92,7 @@ pro dem_inv_reg_parameter_pos,sigmaA,SigmaB,U,W,Data,Err,dem_guess,reg_tweak,opt
   endfor
 
   discr=total(arg,1)-total(err*err)*reg_tweak
-
+  opt_pos=-1 ; added to make sure still something to printout even if npos=0
   pos=where(xi_np eq 0, npos)
   reg_pos=dblarr(nreg)
   if (npos gt 0) then begin

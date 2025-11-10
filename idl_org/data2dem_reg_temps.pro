@@ -206,7 +206,7 @@ FUNCTION data2dem_reg_temps, tresp_logT ,TRmatrix ,data ,edata ,temps,$
 
     reg_solution={data:data,edata:edata, Tresp:Trmatint,channels:channels,$
       DEM:DEM_reg[0:nT-1]*1d20, eDEM:reg_sol_err[0:nT-1]*1d20, $
-      logT:logT,elogT:fwhm/(2.0*sqrt(2*alog(2))),RK:RK,$
+      logT:mlogT,elogT:fwhm/(2.0*sqrt(2*alog(2))),RK:RK,$
       data_reg:data_reg,residuals:residuals,chisq:chisq,data_cont_t:data_cont_t,$
       DEM_pos:DEM_reg_pos[0:nT-1]*1d20, eDEM_pos:reg_sol_err_pos[0:nT-1]*1d20, $
       elogT_pos:fwhm_pos/(2.0*sqrt(2*alog(2))),RK_pos:RK_pos,$
