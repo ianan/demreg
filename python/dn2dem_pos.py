@@ -230,7 +230,7 @@ def dn2dem_pos(dn_in,edn_in,tresp,tresp_logt,temps,reg_tweak=1.0,max_iter=10,glo
     # reshape the 1d arrays to original dimensions and squeeze extra dimensions
     dem = ((np.reshape(dem1d, [nx, ny, nt]))*sclf).squeeze()
     edem = ((np.reshape(edem1d, [nx, ny, nt]))*sclf).squeeze()
-    elogt = (np.reshape(elogt1d, [ny, nx, nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
+    elogt = (np.reshape(elogt1d, [nx, ny, nt])/(2.0*np.sqrt(2.*np.log(2.)))).squeeze()
     chisq = (np.reshape(chisq1d, [nx, ny])).squeeze()
     dn_reg = (np.reshape(dn_reg1d, [nx, ny, nf])).squeeze()
 
