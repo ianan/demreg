@@ -17,10 +17,6 @@ import scipy.io as io
 warnings.simplefilter('ignore')
 matplotlib.rcParams['font.size'] = 16
 
-# So can have single copy of demreg on system, and don't need copy in working directory
-# Change to your local copy's location...
-sys_path.append('/Users/iain/github/demreg/python')
-
 # Load in the SSWIDL generated response functions
 # Was produced by make_aiaresp_forpy.pro (can't escape sswidl that easily....)
 trin = io.readsav('aia_tresp_en.dat')
