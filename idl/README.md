@@ -2,7 +2,7 @@
 
 This directory contains the latest version of the regularized inversion DEM code. 
 
-It is based on the mapping version of the DEM reg code (http://www.astro.gla.ac.uk/~iain/demreg/map/) - it works but is still occassionally being worked on/tweaked.
+It is based on the mapping version of the DEM reg code (http://www.astro.gla.ac.uk/~iain/demreg/map/) - it works but is still occasionally being worked on/tweaked.
 
 The improvements over the older code are:
 * Works with any instrument - just supply the data and corresponding temperature response functions

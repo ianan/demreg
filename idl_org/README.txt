@@ -51,11 +51,11 @@ IDL>@aia_example
 aia_example.pro		
 	** SDO/AIA with a Gaussian DEM Model
 aia_example_ar.pro		
-	** SDO/AIA with the CHINATI Active Region DEM Model
+	** SDO/AIA with the CHIANTI Active Region DEM Model
 aia_example_new.pro		
 	** SDO/AIA with generic Gaussian DEM Model
 line_example.pro		
-	 ** Hinode/EIS with the CHINATI Quiet Sun DEM Model
+	 ** Hinode/EIS with the CHIANTI Quiet Sun DEM Model
 
 For the CHIANTI model DEM examples both the SDO/AIA and chianti ssw packages need to
 be installed, i.e. setenv SSW_INSTR "aia chianti"
