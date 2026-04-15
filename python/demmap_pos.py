@@ -7,7 +7,11 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 from tqdm import tqdm
 from threadpoolctl import threadpool_limits
 
-def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,dem_norm0=None,nmu=42,warn=False,l_emd=False,rscl=False):
+def init_worker():
+ threadpool_limits(limits=1)
+
+def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1.5,
+               dem_norm0=None,nmu=42,warn=False,l_emd=False,rscl=False,max_workers=1):
     """
     demmap_pos
     computes the dems for a 1 d array of length na with nf filters using the dn (g) counts and the temperature
@@ -77,6 +81,8 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         print out warnings
     l_emd
         remove sqrt from constraint matrix (best with EMD)
+     max_workers:
+        Max number of threads to use when code runs in parallel mode (default 1 here but 50% of cpu_count from dn2dem_pos))
     
     Outputs
 
@@ -92,7 +98,7 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
     dn_reg
         the simulated dn for each filter for the recovered DEM    
     """
- 
+
     na=dd.shape[0]
     nf=rmatrix.shape[1]
     nt=logt.shape[0]
@@ -114,7 +120,9 @@ def demmap_pos(dd,ed,rmatrix,logt,dlogt,glc,reg_tweak=1.0,max_iter=10,rgt_fact=1
         niter=(int(np.floor((na)/n_par)))
 #       Put this here to make sure running dem calc in parallel, not the underlying np/gsvd stuff (this correct/needed?)  
         with threadpool_limits(limits=1):
-            with ProcessPoolExecutor() as exe:
+            # with ProcessPoolExecutor() as exe:
+            with ProcessPoolExecutor(max_workers=max_workers, initializer=init_worker) as exe:
+                print(f'Num CPUs/Threads used: {max_workers}')
                 futures=[exe.submit(dem_unwrap, dd[i*n_par:(i+1)*n_par,:],ed[i*n_par:(i+1)*n_par,:],rmatrix,logt,dlogt,glc, \
                     reg_tweak=reg_tweak,max_iter=max_iter,rgt_fact=rgt_fact,dem_norm0=dem_norm0[i*n_par:(i+1)*n_par,:],\
                         nmu=nmu,warn=warn,l_emd=l_emd,rscl=rscl) \
