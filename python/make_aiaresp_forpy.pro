@@ -1,7 +1,7 @@
 pro make_aiaresp_forpy
   compile_opt idl2
 
-  ; IDL script to produce the AIA temeprature response functions,
+  ; IDL script to produce the AIA temperature response functions,
   ; then output it is a simple format that python will be happy with.
   ;
   ; This is the v10 responses with no degradation correction in them, since ran in Jan 2022
@@ -10,7 +10,7 @@ pro make_aiaresp_forpy
   ; So need to degradation correct your AIA data (using ssw or aiapy)
   ; before combining with these responses
   ;
-  ; What the diferent options do are detailed in:
+  ; What the different options do are detailed in:
   ; https://hesperia.gsfc.nasa.gov/ssw/sdo/aia/idl/response/aia_get_response.pro
   ;
   ; Note can combine these together (i.e. noblend + chiantifix) but just doing individually here
